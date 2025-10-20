@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { supabase } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
@@ -12,6 +12,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get user info from Clerk
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const email = clerkUser.emailAddresses[0]?.emailAddress || '';
+    const firstName = clerkUser.firstName || '';
+    const lastName = clerkUser.lastName || '';
+    const imageUrl = clerkUser.imageUrl || null;
+
     const body = await request.json();
     const { role } = body;
 
@@ -22,23 +30,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update user role in database
-    const { data: user, error: updateError } = await supabase
+    // Check if user exists
+    const { data: existingUser } = await supabase
       .from('User')
-      .update({
-        role,
-        updatedAt: new Date().toISOString(),
-      })
+      .select('*')
       .eq('clerkId', userId)
-      .select()
       .single();
 
-    if (updateError) {
-      console.error('Error updating user role:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update user role', details: updateError.message },
-        { status: 500 }
-      );
+    let user;
+
+    if (existingUser) {
+      // Update existing user's role
+      const { data: updatedUser, error: updateError } = await supabase
+        .from('User')
+        .update({
+          role,
+          updatedAt: new Date().toISOString(),
+        })
+        .eq('clerkId', userId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Error updating user role:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to update user role', details: updateError.message },
+          { status: 500 }
+        );
+      }
+
+      user = updatedUser;
+    } else {
+      // Create new user with role
+      const { data: newUser, error: createError } = await supabase
+        .from('User')
+        .insert({
+          id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          clerkId: userId,
+          email,
+          firstName: firstName || null,
+          lastName: lastName || null,
+          imageUrl,
+          role,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('Error creating user:', createError);
+        return NextResponse.json(
+          { error: 'Failed to create user', details: createError.message },
+          { status: 500 }
+        );
+      }
+
+      user = newUser;
     }
 
     // Create profile based on role
