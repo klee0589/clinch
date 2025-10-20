@@ -1,0 +1,255 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  TRAINEE
+  TRAINER
+  GYM_OWNER
+  ADMIN
+}
+
+enum SessionStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum ExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  PROFESSIONAL
+}
+
+enum MuayThaiStyle {
+  TRADITIONAL
+  DUTCH
+  GOLDEN_AGE
+  MODERN
+  FITNESS
+}
+
+model User {
+  id            String    @id @default(cuid())
+  clerkId       String    @unique
+  email         String    @unique
+  firstName     String?
+  lastName      String?
+  role          UserRole
+  imageUrl      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  trainerProfile  TrainerProfile?
+  gymProfile      GymProfile?
+  traineeProfile  TraineeProfile?
+  sentMessages    Message[] @relation("MessageSender")
+  receivedMessages Message[] @relation("MessageReceiver")
+
+  @@index([clerkId])
+  @@index([email])
+}
+
+model TrainerProfile {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bio               String?   @db.Text
+  specialties       MuayThaiStyle[]
+  experienceYears   Int?
+  certifications    String[]
+  hourlyRate        Float?
+  currency          String    @default("USD")
+
+  // Location
+  city              String?
+  state             String?
+  country           String?
+
+  // Availability
+  availableForOnline Boolean  @default(false)
+
+  // Stats
+  totalSessions     Int       @default(0)
+  averageRating     Float?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  gyms              TrainerGym[]
+  sessions          Session[]
+  reviews           Review[]
+
+  @@index([city, state])
+  @@index([averageRating])
+}
+
+model GymProfile {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name          String
+  description   String?   @db.Text
+  phoneNumber   String?
+  website       String?
+
+  // Location
+  address       String
+  city          String
+  state         String
+  country       String
+  zipCode       String?
+  latitude      Float?
+  longitude     Float?
+
+  // Facilities
+  amenities     String[]
+  photos        String[]
+
+  // Pricing
+  membershipFee Float?
+  dropInFee     Float?
+  currency      String    @default("USD")
+
+  // Stats
+  averageRating Float?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  trainers      TrainerGym[]
+  reviews       Review[]
+
+  @@index([city, state])
+  @@index([averageRating])
+}
+
+model TrainerGym {
+  id          String    @id @default(cuid())
+  trainerId   String
+  gymId       String
+
+  trainer     TrainerProfile @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  gym         GymProfile     @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime  @default(now())
+
+  @@unique([trainerId, gymId])
+  @@index([trainerId])
+  @@index([gymId])
+}
+
+model TraineeProfile {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  experienceLevel   ExperienceLevel?
+  goals             String?   @db.Text
+  injuries          String?   @db.Text
+
+  // Preferences
+  preferredStyles   MuayThaiStyle[]
+  budget            Float?
+  currency          String    @default("USD")
+
+  // Location
+  city              String?
+  state             String?
+  country           String?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  sessions          Session[]
+  reviews           Review[]
+
+  @@index([city, state])
+}
+
+model Session {
+  id              String    @id @default(cuid())
+  trainerId       String
+  traineeId       String
+
+  trainer         TrainerProfile @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  trainee         TraineeProfile @relation(fields: [traineeId], references: [id], onDelete: Cascade)
+
+  scheduledAt     DateTime
+  duration        Int       // in minutes
+  status          SessionStatus @default(PENDING)
+
+  // Payment
+  price           Float
+  currency        String    @default("USD")
+  paid            Boolean   @default(false)
+
+  // Location
+  location        String?
+  isOnline        Boolean   @default(false)
+
+  notes           String?   @db.Text
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([trainerId, scheduledAt])
+  @@index([traineeId, scheduledAt])
+  @@index([status])
+}
+
+model Message {
+  id            String    @id @default(cuid())
+  senderId      String
+  receiverId    String
+
+  sender        User      @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver      User      @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  content       String    @db.Text
+  read          Boolean   @default(false)
+
+  createdAt     DateTime  @default(now())
+
+  @@index([senderId, receiverId])
+  @@index([receiverId, read])
+}
+
+model Review {
+  id            String    @id @default(cuid())
+
+  // Polymorphic relation - review can be for trainer or gym
+  trainerId     String?
+  gymId         String?
+  traineeId     String
+
+  trainer       TrainerProfile? @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  gym           GymProfile?     @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  trainee       TraineeProfile  @relation(fields: [traineeId], references: [id], onDelete: Cascade)
+
+  rating        Int       // 1-5
+  comment       String?   @db.Text
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([trainerId])
+  @@index([gymId])
+  @@index([traineeId])
+}

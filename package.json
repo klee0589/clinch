@@ -1,0 +1,21 @@
+{
+  "name": "clinch",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Muay Thai trainer and trainee marketplace platform",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=@clinch/web",
+    "dev:mobile": "npm run dev --workspace=@clinch/mobile",
+    "build:web": "npm run build --workspace=@clinch/web",
+    "build:mobile": "npm run build --workspace=@clinch/mobile",
+    "db:generate": "npm run generate --workspace=@clinch/database",
+    "db:migrate": "npm run migrate --workspace=@clinch/database",
+    "db:studio": "npm run studio --workspace=@clinch/database"
+  },
+  "keywords": ["muay-thai", "trainer", "marketplace"],
+  "author": "",
+  "license": "MIT"
+}
