@@ -34,7 +34,7 @@ export default function TrainerDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [traineeProfileId, setTraineeProfileId] = useState<string | null>(null);
 
   const trainerId = params.id as string;
 
@@ -62,21 +62,30 @@ export default function TrainerDetailPage() {
   }, [trainerId]);
 
   useEffect(() => {
-    async function fetchCurrentUser() {
+    async function fetchTraineeProfile() {
       if (!clerkUser) return;
 
       try {
-        const response = await fetch("/api/users/me");
-        if (response.ok) {
-          const userData = await response.json();
-          setCurrentUserId(userData.id);
+        // First get the user
+        const userResponse = await fetch("/api/users/me");
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+
+          // Then get their trainee profile
+          const profileResponse = await fetch(
+            `/api/trainee-profile?userId=${userData.id}`,
+          );
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            setTraineeProfileId(profileData.id);
+          }
         }
       } catch (err) {
-        console.error("Error fetching current user:", err);
+        console.error("Error fetching trainee profile:", err);
       }
     }
 
-    fetchCurrentUser();
+    fetchTraineeProfile();
   }, [clerkUser]);
 
   const handleBookingClick = () => {
@@ -357,7 +366,7 @@ export default function TrainerDetailPage() {
       </main>
 
       {/* Booking Modal */}
-      {isBookingModalOpen && currentUserId && (
+      {isBookingModalOpen && traineeProfileId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
           <div className="relative bg-zinc-900 border border-zinc-700 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-zinc-900 border-b border-zinc-700 px-6 py-4 flex items-center justify-between">
@@ -374,8 +383,8 @@ export default function TrainerDetailPage() {
             <div className="p-6">
               <BookingForm
                 trainerId={trainer.id}
-                traineeId={currentUserId}
-                hourlyRate={trainer.hourlyRate || 0}
+                traineeId={traineeProfileId}
+                trainerRate={trainer.hourlyRate || 0}
                 onSuccess={handleBookingSuccess}
                 onCancel={() => setIsBookingModalOpen(false)}
               />
