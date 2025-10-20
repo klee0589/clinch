@@ -95,7 +95,8 @@ class ApiClient {
     if (params?.minRating !== undefined) searchParams.set('minRating', params.minRating.toString());
 
     const query = searchParams.toString();
-    return this.request<TrainerProfile[]>(`/trainers${query ? `?${query}` : ''}`);
+    // Use Supabase endpoint instead of Prisma
+    return this.request<TrainerProfile[]>(`/trainers-supabase${query ? `?${query}` : ''}`);
   }
 
   async getTrainer(id: string) {
@@ -123,7 +124,8 @@ class ApiClient {
     if (params?.minRating !== undefined) searchParams.set('minRating', params.minRating.toString());
 
     const query = searchParams.toString();
-    return this.request<GymProfile[]>(`/gyms${query ? `?${query}` : ''}`);
+    // Use Supabase endpoint instead of Prisma
+    return this.request<GymProfile[]>(`/gyms-supabase${query ? `?${query}` : ''}`);
   }
 
   async getGym(id: string) {
@@ -149,7 +151,8 @@ class ApiClient {
     isOnline?: boolean;
     notes?: string;
   }) {
-    return this.request<Session>('/sessions', {
+    // Use Supabase endpoint instead of Prisma
+    return this.request<Session>('/sessions-supabase', {
       method: 'POST',
       body: JSON.stringify(sessionData),
     });
@@ -157,7 +160,8 @@ class ApiClient {
 
   async getSessions(status?: string) {
     const query = status ? `?status=${status}` : '';
-    return this.request<Session[]>(`/sessions${query}`);
+    // Use Supabase endpoint instead of Prisma
+    return this.request<Session[]>(`/sessions-supabase${query}`);
   }
 
   async getSession(id: string) {

@@ -116,4 +116,18 @@ Once you've run both SQL files, your app is **100% functional**!
 
 Visit: **http://localhost:3001**
 
+## 🔧 Technical Architecture
+
+The app uses **Supabase REST API** directly instead of Prisma for database queries. This approach:
+- Bypasses network/firewall connection issues with direct PostgreSQL connections
+- Uses Supabase's built-in REST API with proper authentication
+- Provides the same functionality without requiring direct database access
+
+### API Endpoints Created:
+- `/api/trainers-supabase` - Browse and search trainers
+- `/api/gyms-supabase` - Browse and search gyms
+- `/api/sessions-supabase` - View and create training sessions
+
+All endpoints support full filtering, searching, and CRUD operations.
+
 Enjoy your Muay Thai marketplace! 🥊
