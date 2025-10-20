@@ -141,54 +141,7 @@ export default function TrainerDetailPage() {
     : "Unknown Trainer";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-900 via-zinc-800 to-zinc-900">
-      {/* Header */}
-      <header className="border-b border-zinc-700 bg-zinc-900/50 backdrop-blur-sm">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-white">
-            Clinch
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/browse/trainers"
-              className="text-zinc-300 hover:text-white transition"
-            >
-              Find Trainers
-            </Link>
-            <Link
-              href="/browse/gyms"
-              className="text-zinc-300 hover:text-white transition"
-            >
-              Find Gyms
-            </Link>
-            {clerkUser ? (
-              <Link
-                href="/dashboard"
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition"
-              >
-                Dashboard
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/sign-in"
-                  className="text-zinc-300 hover:text-white transition"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/sign-up"
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition"
-                >
-                  Get Started
-                </Link>
-              </>
-            )}
-          </div>
-        </nav>
-      </header>
-
-      {/* Content */}
+    <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Back Button */}
         <Link
@@ -400,6 +353,6 @@ export default function TrainerDetailPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

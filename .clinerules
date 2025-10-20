@@ -62,6 +62,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 3. Click Decline → PATCH with status=CANCELLED
 4. UI updates optimistically (setSessions with map)
 
+### Profile Editing (Trainer)
+1. Trainer clicks avatar → "My Profile" from dropdown
+2. GET `/api/trainers-supabase?userId={userId}` to load trainer profile
+3. Edit form fields:
+   - Bio (textarea)
+   - Specialties (multi-select buttons)
+   - Experience years & hourly rate (numbers)
+   - Certifications (array add/remove)
+   - Location (city, state, country)
+   - Online availability (toggle)
+4. PATCH `/api/trainers-supabase/{trainerId}` to save
+5. Show success/error message
+
 ## Common Errors & Solutions
 
 ### Error: Foreign Key Constraint Violation (23503)
@@ -88,6 +101,16 @@ if (!traineeProfileId) {
 }
 ```
 
+### Error: Column not found in schema (PGRST204)
+```
+Could not find the 'languages' column of 'TrainerProfile' in the schema cache
+```
+**Cause**: Profile form trying to update column that doesn't exist in database
+**Fix**:
+1. Run migration: `add-languages-column.sql` in Supabase SQL Editor
+2. OR remove field from form until migration is run
+3. Always check schema matches form fields
+
 ## File Structure Patterns
 
 ### API Routes
@@ -100,6 +123,12 @@ if (!traineeProfileId) {
 - Client components need `"use client"` directive
 - Use Clerk hooks: `useUser()`, `useClerk()`
 - Supabase queries in useEffect with proper dependencies
+
+### Layouts (Next.js 15 App Router)
+- Use route groups for shared layouts: `app/(main)/layout.tsx`
+- Header component defined ONCE in layout, not imported in each page
+- DRY principle: Pages inside `(main)` folder automatically get header
+- Auth pages (sign-in, sign-up, onboarding) outside (main) group
 
 ### Validation
 - Schemas in `packages/shared/src/validations/`

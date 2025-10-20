@@ -54,3 +54,37 @@ export async function GET(
     );
   }
 }
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+
+    // Update the trainer profile
+    const { data: trainer, error } = await supabase
+      .from("TrainerProfile")
+      .update(body)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating trainer:", error);
+      return NextResponse.json(
+        { error: "Failed to update trainer", details: error.message },
+        { status: 400 },
+      );
+    }
+
+    return NextResponse.json(trainer);
+  } catch (error) {
+    console.error("Error updating trainer:", error);
+    return NextResponse.json(
+      { error: "Failed to update trainer" },
+      { status: 500 },
+    );
+  }
+}

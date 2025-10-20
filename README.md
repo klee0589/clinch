@@ -181,9 +181,27 @@ npm run dev:web
 - Prettier code formatting on commit
 - GitHub repository integration
 
+#### Profile Management
+- **Trainer Profile Editing**: Complete profile management interface
+  - Bio editing with rich text area
+  - Specialty selection (Traditional, Modern, Dutch, Golden Age, Fitness)
+  - Experience years and hourly rate settings
+  - Certification management (add/remove)
+  - Location settings (city, state, country)
+  - Online availability toggle
+  - Real-time form validation and save feedback
+- Accessible via user menu dropdown (My Profile)
+- API endpoint for profile updates (`PATCH /api/trainers-supabase/[id]`)
+
 #### UI/UX
 - Modern, responsive design with Tailwind CSS 4
 - Dark mode support throughout
+- Consistent header navigation with DRY principle (Next.js layouts)
+- User menu dropdown with profile access
+  - Dashboard
+  - My Profile (edit trainer profile)
+  - Settings
+  - Sign Out
 - Loading states and error handling
 - Toast notifications for user actions
 - Smooth transitions and hover effects
@@ -195,8 +213,9 @@ npm run dev:web
 - Real-time messaging between users
 - Email/SMS notifications
 - Review and rating system UI
-- Profile editing forms (trainer/trainee/gym)
+- Trainee and gym profile editing forms
 - Advanced search with more filters
+- Languages field for trainer profiles (migration script ready: `add-languages-column.sql`)
 - Calendar view for session scheduling
 - Trainer availability management
 
