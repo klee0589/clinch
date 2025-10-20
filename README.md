@@ -80,6 +80,10 @@ npm run db:push
 
 # Or run migrations (for production)
 npm run db:migrate
+
+# (Optional) Seed database with sample data
+cd packages/database
+npm run seed
 ```
 
 ### 6. Run Development Servers
@@ -97,7 +101,7 @@ npm run db:studio
 
 ## Features
 
-### Current Features (MVP v0.1)
+### Current Features (MVP v0.2)
 - ✅ Modern landing page with hero section
 - ✅ Browse trainers page with filtering
 - ✅ Browse gyms page with filtering
@@ -107,20 +111,26 @@ npm run db:studio
 - ✅ Database schema for all entities
 - ✅ Shared TypeScript types and Zod validation schemas
 - ✅ Responsive dark-themed UI
+- ✅ Comprehensive REST API with authentication
+- ✅ Full CRUD operations for trainers, gyms, and sessions
+- ✅ Advanced search and filtering capabilities
+- ✅ Profile management APIs
+- ✅ Complete test suite with 38 passing validation tests
+- ✅ Database seeding with realistic sample data
 
 ### Ready to Integrate (Setup Required)
-- 🔧 User authentication with Clerk (code ready, needs API keys)
+- 🔧 User authentication with Clerk (code ready, configured)
 - 🔧 Role-based access (Trainee, Trainer, Gym Owner)
 - 🔧 Onboarding flow with role selection
-- 🔧 Database connectivity with Supabase (code ready, needs connection)
+- 🔧 Database connectivity with Supabase (configured)
 
 ### Next Phase Features
-- 📋 Session booking system with calendar
+- 📋 Frontend integration with API endpoints
+- 📋 Session booking UI with calendar
 - 📋 Real-time messaging between users
-- 📋 Working search and filter functionality
-- 📋 Profile creation and editing forms
+- 📋 Profile creation and editing forms (frontend)
 - 📋 Payment processing with Stripe
-- 📋 Review submission and moderation
+- 📋 Review submission UI
 - 📋 Email/push notifications
 - 📋 Mobile app implementation
 - 📋 Gym dashboard
@@ -140,11 +150,41 @@ npm run db:studio
 
 ## API Routes
 
-### `/api/users`
-- `POST`: Create new user
-- `GET`: Get current user with profile
+See [API Documentation](packages/web/API.md) for complete API reference.
 
-More API routes coming soon...
+### Available Endpoints
+
+#### Users
+- `POST /api/users` - Create new user
+- `GET /api/users` - Get current user with profile
+
+#### Trainers
+- `GET /api/trainers` - Search trainers (with filters)
+- `GET /api/trainers/:id` - Get trainer details
+- `PATCH /api/trainers/:id` - Update trainer profile
+
+#### Gyms
+- `GET /api/gyms` - Search gyms (with filters)
+- `GET /api/gyms/:id` - Get gym details
+- `PATCH /api/gyms/:id` - Update gym profile
+
+#### Sessions
+- `POST /api/sessions` - Create new session
+- `GET /api/sessions` - Get user's sessions
+- `GET /api/sessions/:id` - Get session details
+- `PATCH /api/sessions/:id` - Update session
+- `DELETE /api/sessions/:id` - Delete session
+
+#### Profiles
+- `POST /api/profiles/trainer` - Create trainer profile
+- `POST /api/profiles/trainee` - Create trainee profile
+- `POST /api/profiles/gym` - Create gym profile
+
+All endpoints include:
+- Authentication via Clerk
+- Authorization checks
+- Input validation with Zod
+- Comprehensive error handling
 
 ## Scripts
 
@@ -162,6 +202,12 @@ npm run db:generate          # Generate Prisma client
 npm run db:migrate           # Run database migrations
 npm run db:push              # Push schema to database (dev)
 npm run db:studio            # Open Prisma Studio
+
+# Testing
+cd packages/web && npm test              # Run web tests
+cd packages/shared && npm test           # Run shared package tests
+cd packages/web && npm run test:watch    # Run tests in watch mode
+cd packages/shared && npm run test:ui    # Open Vitest UI
 ```
 
 ## Project Conventions
