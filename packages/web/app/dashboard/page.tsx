@@ -1,40 +1,142 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useUser } from '@clerk/nextjs';
-import { useSessions } from '@/hooks/useSessions';
-import { Card, CardHeader, CardContent } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { SessionStatus } from '@clinch/shared';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
+import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { SessionStatus } from "@clinch/shared";
+
+type ViewMode = "trainee" | "trainer";
 
 export default function DashboardPage() {
   const { user } = useUser();
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
-  const { sessions, loading, error } = useSessions(statusFilter);
+  const [viewMode, setViewMode] = useState<ViewMode>("trainee");
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(
+    undefined,
+  );
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  // Fetch user profile to determine roles
+  useEffect(() => {
+    async function fetchUserProfile() {
+      if (!user) return;
+
+      try {
+        const response = await fetch("/api/users/me");
+        if (response.ok) {
+          const data = await response.json();
+          setUserProfile(data);
+        }
+      } catch (err) {
+        console.error("Error fetching user profile:", err);
+      }
+    }
+
+    fetchUserProfile();
+  }, [user]);
+
+  // Fetch sessions based on view mode
+  useEffect(() => {
+    async function fetchSessions() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const params = new URLSearchParams();
+        if (statusFilter) params.append("status", statusFilter);
+        params.append("view", viewMode);
+
+        const response = await fetch(
+          `/api/sessions-supabase?${params.toString()}`,
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch sessions");
+        }
+
+        const data = await response.json();
+        setSessions(data);
+      } catch (err) {
+        console.error("Error fetching sessions:", err);
+        setError("Failed to load sessions");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (user) {
+      fetchSessions();
+    }
+  }, [user, statusFilter, viewMode]);
 
   const formatDate = (date: Date | string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
     });
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case SessionStatus.PENDING:
-        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200';
+        return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200";
       case SessionStatus.CONFIRMED:
-        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200';
+        return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200";
       case SessionStatus.COMPLETED:
-        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200';
+        return "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200";
       case SessionStatus.CANCELLED:
-        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
+        return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200";
       default:
-        return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200';
+        return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200";
+    }
+  };
+
+  const handleAcceptBooking = async (sessionId: string) => {
+    try {
+      const response = await fetch(`/api/sessions-supabase/${sessionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: SessionStatus.CONFIRMED }),
+      });
+
+      if (response.ok) {
+        // Refresh sessions
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === sessionId ? { ...s, status: SessionStatus.CONFIRMED } : s,
+          ),
+        );
+      }
+    } catch (err) {
+      console.error("Error accepting booking:", err);
+    }
+  };
+
+  const handleDeclineBooking = async (sessionId: string) => {
+    try {
+      const response = await fetch(`/api/sessions-supabase/${sessionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: SessionStatus.CANCELLED }),
+      });
+
+      if (response.ok) {
+        // Refresh sessions
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === sessionId ? { ...s, status: SessionStatus.CANCELLED } : s,
+          ),
+        );
+      }
+    } catch (err) {
+      console.error("Error declining booking:", err);
     }
   };
 
@@ -47,7 +149,10 @@ export default function DashboardPage() {
             Clinch
           </Link>
           <div className="flex items-center gap-4">
-            <Link href="/browse/trainers" className="text-gray-600 dark:text-gray-300 hover:text-orange-600 transition">
+            <Link
+              href="/browse/trainers"
+              className="text-gray-600 dark:text-gray-300 hover:text-orange-600 transition"
+            >
               Find Trainers
             </Link>
             <Link href="/dashboard" className="text-orange-600 font-medium">
@@ -56,7 +161,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
                 <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
-                  {user?.firstName?.charAt(0) || 'U'}
+                  {user?.firstName?.charAt(0) || "U"}
                 </span>
               </div>
             </div>
@@ -68,38 +173,60 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            My Sessions
+            Dashboard
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Manage your upcoming and past training sessions
+            Manage your training sessions and bookings
           </p>
+        </div>
+
+        {/* View Mode Tabs */}
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={viewMode === "trainee" ? "primary" : "ghost"}
+            onClick={() => setViewMode("trainee")}
+          >
+            My Bookings
+          </Button>
+          <Button
+            variant={viewMode === "trainer" ? "primary" : "ghost"}
+            onClick={() => setViewMode("trainer")}
+          >
+            Booking Requests
+          </Button>
         </div>
 
         {/* Filter Tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto">
           <Button
-            variant={statusFilter === undefined ? 'primary' : 'ghost'}
+            variant={statusFilter === undefined ? "primary" : "ghost"}
             size="sm"
             onClick={() => setStatusFilter(undefined)}
           >
             All Sessions
           </Button>
           <Button
-            variant={statusFilter === SessionStatus.PENDING ? 'primary' : 'ghost'}
+            variant={
+              statusFilter === SessionStatus.PENDING ? "primary" : "ghost"
+            }
             size="sm"
             onClick={() => setStatusFilter(SessionStatus.PENDING)}
           >
             Pending
           </Button>
           <Button
-            variant={statusFilter === SessionStatus.CONFIRMED ? 'primary' : 'ghost'}
+            variant={
+              statusFilter === SessionStatus.CONFIRMED ? "primary" : "ghost"
+            }
             size="sm"
             onClick={() => setStatusFilter(SessionStatus.CONFIRMED)}
           >
             Confirmed
           </Button>
           <Button
-            variant={statusFilter === SessionStatus.COMPLETED ? 'primary' : 'ghost'}
+            variant={
+              statusFilter === SessionStatus.COMPLETED ? "primary" : "ghost"
+            }
             size="sm"
             onClick={() => setStatusFilter(SessionStatus.COMPLETED)}
           >
@@ -111,7 +238,9 @@ export default function DashboardPage() {
         {loading && (
           <div className="text-center py-16">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading sessions...</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              Loading sessions...
+            </p>
           </div>
         )}
 
@@ -139,9 +268,13 @@ export default function DashboardPage() {
                           {/* Session Info */}
                           <div className="flex items-center gap-3 mb-2">
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                              {session.trainer?.user?.firstName || 'Unknown'} {session.trainer?.user?.lastName || 'Trainer'}
+                              {viewMode === "trainee"
+                                ? `${session.trainer?.user?.firstName || "Unknown"} ${session.trainer?.user?.lastName || "Trainer"}`
+                                : `${session.trainee?.user?.firstName || "Unknown"} ${session.trainee?.user?.lastName || "Trainee"}`}
                             </h3>
-                            <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(session.status)}`}>
+                            <span
+                              className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(session.status)}`}
+                            >
                               {session.status}
                             </span>
                           </div>
@@ -150,7 +283,9 @@ export default function DashboardPage() {
                           <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-2">
                             <span>📅 {formatDate(session.scheduledAt)}</span>
                             <span>⏱️ {session.duration} minutes</span>
-                            <span>{session.isOnline ? '💻 Online' : '📍 In-Person'}</span>
+                            <span>
+                              {session.isOnline ? "💻 Online" : "📍 In-Person"}
+                            </span>
                           </div>
 
                           {/* Location */}
@@ -173,13 +308,41 @@ export default function DashboardPage() {
                           <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 mb-2">
                             ${session.price}
                           </div>
-                          {!session.paid && session.status === SessionStatus.CONFIRMED && (
-                            <span className="inline-block px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded">
-                              Payment Pending
-                            </span>
-                          )}
+
+                          {/* Trainer Actions for Pending Requests */}
+                          {viewMode === "trainer" &&
+                            session.status === SessionStatus.PENDING && (
+                              <div className="flex gap-2 mt-4">
+                                <Button
+                                  size="sm"
+                                  variant="primary"
+                                  onClick={() =>
+                                    handleAcceptBooking(session.id)
+                                  }
+                                >
+                                  Accept
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    handleDeclineBooking(session.id)
+                                  }
+                                >
+                                  Decline
+                                </Button>
+                              </div>
+                            )}
+
+                          {/* Payment Status */}
+                          {!session.paid &&
+                            session.status === SessionStatus.CONFIRMED && (
+                              <span className="inline-block px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded mt-2">
+                                Payment Pending
+                              </span>
+                            )}
                           {session.paid && (
-                            <span className="inline-block px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded">
+                            <span className="inline-block px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded mt-2">
                               ✓ Paid
                             </span>
                           )}
@@ -195,14 +358,20 @@ export default function DashboardPage() {
                   <div className="text-center py-16">
                     <div className="text-6xl mb-4">📅</div>
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                      No sessions yet
+                      {viewMode === "trainee"
+                        ? "No bookings yet"
+                        : "No booking requests yet"}
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400 mb-6">
-                      Book your first session with a trainer to get started
+                      {viewMode === "trainee"
+                        ? "Book your first session with a trainer to get started"
+                        : "Booking requests from trainees will appear here"}
                     </p>
-                    <Link href="/browse/trainers">
-                      <Button>Find Trainers</Button>
-                    </Link>
+                    {viewMode === "trainee" && (
+                      <Link href="/browse/trainers">
+                        <Button>Find Trainers</Button>
+                      </Link>
+                    )}
                   </div>
                 </CardContent>
               </Card>

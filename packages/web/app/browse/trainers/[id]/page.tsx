@@ -93,6 +93,14 @@ export default function TrainerDetailPage() {
       router.push("/sign-in");
       return;
     }
+
+    if (!traineeProfileId) {
+      alert(
+        "You need to have a trainee profile to book sessions. Please update your profile to include trainee role.",
+      );
+      return;
+    }
+
     setIsBookingModalOpen(true);
   };
 
