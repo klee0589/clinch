@@ -15,7 +15,14 @@
     "db:migrate": "npm run migrate --workspace=@clinch/database",
     "db:studio": "npm run studio --workspace=@clinch/database"
   },
-  "keywords": ["muay-thai", "trainer", "marketplace"],
+  "keywords": [
+    "muay-thai",
+    "trainer",
+    "marketplace"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^17.2.3"
+  }
 }
