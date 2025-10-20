@@ -1,55 +1,128 @@
-import Link from 'next/link';
+"use client";
 
-// Mock trainer data
-const mockTrainer = {
-  id: '1',
-  name: 'John "The Clincher" Smith',
-  bio: 'Former professional fighter with 15 years of experience. I specialize in traditional Muay Thai techniques passed down from my time training in Thailand. My approach focuses on building strong fundamentals while respecting the art and culture of Muay Thai.',
-  specialties: ['Traditional', 'Golden Age'],
-  experienceYears: 15,
-  hourlyRate: 80,
-  city: 'Los Angeles',
-  state: 'CA',
-  country: 'USA',
-  averageRating: 4.9,
-  totalSessions: 342,
-  availableForOnline: true,
-  certifications: [
-    'WMO Certified Trainer',
-    'Kru Muay Thai (Thailand)',
-    'First Aid & CPR Certified',
-  ],
-  gyms: [
-    { name: 'LA Muay Thai Academy', city: 'Los Angeles' },
-    { name: 'Golden Tiger Gym', city: 'Los Angeles' },
-  ],
-};
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import Link from "next/link";
+import { apiClient } from "@/lib/api-client";
+import { BookingForm } from "@/components/sessions/BookingForm";
+import type { TrainerProfile } from "@clinch/shared";
 
-const mockReviews = [
-  {
-    id: '1',
-    rating: 5,
-    comment: 'John is an amazing trainer! His knowledge of traditional techniques is incredible and he really takes time to perfect your form.',
-    traineeName: 'Mike T.',
-    date: '2 weeks ago',
-  },
-  {
-    id: '2',
-    rating: 5,
-    comment: 'Best trainer I\'ve had. Very patient and encouraging, even for beginners like me.',
-    traineeName: 'Sarah L.',
-    date: '1 month ago',
-  },
-  {
-    id: '3',
-    rating: 4,
-    comment: 'Great sessions, learned a lot. Only minor issue is scheduling can be tricky sometimes.',
-    traineeName: 'David K.',
-    date: '2 months ago',
-  },
-];
+interface TrainerWithUser extends TrainerProfile {
+  user?: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    imageUrl?: string;
+    email?: string;
+  };
+  gyms?: Array<{
+    gym: {
+      name: string;
+      city?: string;
+      state?: string;
+      country?: string;
+    };
+  }>;
+}
 
 export default function TrainerDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const { user: clerkUser } = useUser();
+  const [trainer, setTrainer] = useState<TrainerWithUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const trainerId = params.id as string;
+
+  useEffect(() => {
+    async function fetchTrainer() {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/trainers-supabase/${trainerId}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch trainer");
+        }
+        const data = await response.json();
+        setTrainer(data);
+      } catch (err) {
+        console.error("Error fetching trainer:", err);
+        setError("Failed to load trainer profile");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (trainerId) {
+      fetchTrainer();
+    }
+  }, [trainerId]);
+
+  useEffect(() => {
+    async function fetchCurrentUser() {
+      if (!clerkUser) return;
+
+      try {
+        const response = await fetch("/api/users/me");
+        if (response.ok) {
+          const userData = await response.json();
+          setCurrentUserId(userData.id);
+        }
+      } catch (err) {
+        console.error("Error fetching current user:", err);
+      }
+    }
+
+    fetchCurrentUser();
+  }, [clerkUser]);
+
+  const handleBookingClick = () => {
+    if (!clerkUser) {
+      router.push("/sign-in");
+      return;
+    }
+    setIsBookingModalOpen(true);
+  };
+
+  const handleBookingSuccess = () => {
+    setIsBookingModalOpen(false);
+    router.push("/dashboard");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-zinc-900 via-zinc-800 to-zinc-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading trainer profile...</div>
+      </div>
+    );
+  }
+
+  if (error || !trainer) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-zinc-900 via-zinc-800 to-zinc-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-xl mb-4">
+            {error || "Trainer not found"}
+          </div>
+          <Link
+            href="/browse/trainers"
+            className="text-zinc-400 hover:text-white transition"
+          >
+            ← Back to trainers
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const fullName = trainer.user
+    ? `${trainer.user.firstName || ""} ${trainer.user.lastName || ""}`.trim() ||
+      "Unknown Trainer"
+    : "Unknown Trainer";
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-900 via-zinc-800 to-zinc-900">
       {/* Header */}
@@ -59,18 +132,41 @@ export default function TrainerDetailPage() {
             Clinch
           </Link>
           <div className="flex items-center gap-4">
-            <Link href="/browse/trainers" className="text-zinc-300 hover:text-white transition">
+            <Link
+              href="/browse/trainers"
+              className="text-zinc-300 hover:text-white transition"
+            >
               Find Trainers
             </Link>
-            <Link href="/browse/gyms" className="text-zinc-300 hover:text-white transition">
+            <Link
+              href="/browse/gyms"
+              className="text-zinc-300 hover:text-white transition"
+            >
               Find Gyms
             </Link>
-            <Link href="/sign-in" className="text-zinc-300 hover:text-white transition">
-              Sign In
-            </Link>
-            <Link href="/sign-up" className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition">
-              Get Started
-            </Link>
+            {clerkUser ? (
+              <Link
+                href="/dashboard"
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/sign-in"
+                  className="text-zinc-300 hover:text-white transition"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/sign-up"
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </nav>
       </header>
@@ -92,39 +188,63 @@ export default function TrainerDetailPage() {
             <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-8">
               <div className="flex items-start gap-6">
                 {/* Avatar */}
-                <div className="w-24 h-24 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center text-white text-3xl font-bold flex-shrink-0">
-                  {mockTrainer.name.charAt(0)}
-                </div>
+                {trainer.user?.imageUrl ? (
+                  <img
+                    src={trainer.user.imageUrl}
+                    alt={fullName}
+                    className="w-24 h-24 rounded-full object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-24 h-24 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center text-white text-3xl font-bold flex-shrink-0">
+                    {fullName.charAt(0)}
+                  </div>
+                )}
 
                 <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-white mb-2">{mockTrainer.name}</h1>
-                  <p className="text-zinc-400 mb-3">
-                    {mockTrainer.city}, {mockTrainer.state}
-                  </p>
+                  <h1 className="text-3xl font-bold text-white mb-2">
+                    {fullName}
+                  </h1>
+                  {trainer.city && (
+                    <p className="text-zinc-400 mb-3">
+                      {trainer.city}, {trainer.state || trainer.country}
+                    </p>
+                  )}
 
                   {/* Stats */}
                   <div className="flex items-center gap-6 mb-4">
-                    <div className="flex items-center gap-1 text-yellow-500">
-                      <span>⭐</span>
-                      <span className="font-medium text-white">{mockTrainer.averageRating}</span>
-                      <span className="text-zinc-500 text-sm">({mockTrainer.totalSessions} sessions)</span>
-                    </div>
-                    <div className="text-zinc-400 text-sm">
-                      {mockTrainer.experienceYears} years experience
-                    </div>
+                    {trainer.averageRating && (
+                      <div className="flex items-center gap-1 text-yellow-500">
+                        <span>⭐</span>
+                        <span className="font-medium text-white">
+                          {trainer.averageRating.toFixed(1)}
+                        </span>
+                        {trainer.totalSessions && (
+                          <span className="text-zinc-500 text-sm">
+                            ({trainer.totalSessions} sessions)
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {trainer.experienceYears && (
+                      <div className="text-zinc-400 text-sm">
+                        {trainer.experienceYears} years experience
+                      </div>
+                    )}
                   </div>
 
                   {/* Specialties */}
                   <div className="flex flex-wrap gap-2">
-                    {mockTrainer.specialties.map((specialty) => (
-                      <span
-                        key={specialty}
-                        className="px-3 py-1 bg-zinc-900 border border-zinc-700 rounded-full text-sm text-zinc-300"
-                      >
-                        {specialty}
-                      </span>
-                    ))}
-                    {mockTrainer.availableForOnline && (
+                    {trainer.specialties &&
+                      trainer.specialties.length > 0 &&
+                      trainer.specialties.map((specialty) => (
+                        <span
+                          key={specialty}
+                          className="px-3 py-1 bg-zinc-900 border border-zinc-700 rounded-full text-sm text-zinc-300"
+                        >
+                          {specialty.replace("_", " ")}
+                        </span>
+                      ))}
+                    {trainer.availableForOnline && (
                       <span className="px-3 py-1 bg-green-900/30 border border-green-700 rounded-full text-sm text-green-400">
                         Online Sessions
                       </span>
@@ -135,75 +255,81 @@ export default function TrainerDetailPage() {
             </div>
 
             {/* About */}
-            <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-8">
-              <h2 className="text-2xl font-bold text-white mb-4">About</h2>
-              <p className="text-zinc-300 leading-relaxed">{mockTrainer.bio}</p>
-            </div>
+            {trainer.bio && (
+              <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-8">
+                <h2 className="text-2xl font-bold text-white mb-4">About</h2>
+                <p className="text-zinc-300 leading-relaxed">{trainer.bio}</p>
+              </div>
+            )}
 
             {/* Certifications */}
-            <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-8">
-              <h2 className="text-2xl font-bold text-white mb-4">Certifications</h2>
-              <ul className="space-y-2">
-                {mockTrainer.certifications.map((cert) => (
-                  <li key={cert} className="flex items-center gap-2 text-zinc-300">
-                    <span className="text-green-500">✓</span>
-                    {cert}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {trainer.certifications && trainer.certifications.length > 0 && (
+              <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-8">
+                <h2 className="text-2xl font-bold text-white mb-4">
+                  Certifications
+                </h2>
+                <ul className="space-y-2">
+                  {trainer.certifications.map((cert) => (
+                    <li
+                      key={cert}
+                      className="flex items-center gap-2 text-zinc-300"
+                    >
+                      <span className="text-green-500">✓</span>
+                      {cert}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Training Locations */}
-            <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-8">
-              <h2 className="text-2xl font-bold text-white mb-4">Training Locations</h2>
-              <div className="space-y-3">
-                {mockTrainer.gyms.map((gym) => (
-                  <div key={gym.name} className="flex items-center gap-3">
-                    <span className="text-2xl">🏛️</span>
-                    <div>
-                      <div className="text-white font-medium">{gym.name}</div>
-                      <div className="text-zinc-400 text-sm">{gym.city}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Reviews */}
-            <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-8">
-              <h2 className="text-2xl font-bold text-white mb-6">Reviews</h2>
-              <div className="space-y-6">
-                {mockReviews.map((review) => (
-                  <div key={review.id} className="border-b border-zinc-700 last:border-0 pb-6 last:pb-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex text-yellow-500">
-                        {Array.from({ length: review.rating }).map((_, i) => (
-                          <span key={i}>⭐</span>
-                        ))}
+            {trainer.gyms && trainer.gyms.length > 0 && (
+              <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-8">
+                <h2 className="text-2xl font-bold text-white mb-4">
+                  Training Locations
+                </h2>
+                <div className="space-y-3">
+                  {trainer.gyms.map((gymRelation, idx) => (
+                    <div key={idx} className="flex items-center gap-3">
+                      <span className="text-2xl">🏛️</span>
+                      <div>
+                        <div className="text-white font-medium">
+                          {gymRelation.gym.name}
+                        </div>
+                        {gymRelation.gym.city && (
+                          <div className="text-zinc-400 text-sm">
+                            {gymRelation.gym.city}
+                          </div>
+                        )}
                       </div>
-                      <span className="text-zinc-400 text-sm">
-                        by {review.traineeName} · {review.date}
-                      </span>
                     </div>
-                    <p className="text-zinc-300">{review.comment}</p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-6 sticky top-6">
               <div className="text-center mb-6">
-                <div className="text-4xl font-bold text-white mb-1">
-                  ${mockTrainer.hourlyRate}
-                  <span className="text-xl text-zinc-400">/hr</span>
-                </div>
-                <div className="text-sm text-zinc-400">per session</div>
+                {trainer.hourlyRate ? (
+                  <>
+                    <div className="text-4xl font-bold text-white mb-1">
+                      ${trainer.hourlyRate}
+                      <span className="text-xl text-zinc-400">/hr</span>
+                    </div>
+                    <div className="text-sm text-zinc-400">per session</div>
+                  </>
+                ) : (
+                  <div className="text-zinc-400">Contact for pricing</div>
+                )}
               </div>
 
-              <button className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition mb-3">
+              <button
+                onClick={handleBookingClick}
+                className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition mb-3"
+              >
                 Book a Session
               </button>
 
@@ -214,17 +340,49 @@ export default function TrainerDetailPage() {
               <div className="mt-6 pt-6 border-t border-zinc-700 space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-zinc-400">Response time</span>
-                  <span className="text-white">Within 2 hours</span>
+                  <span className="text-white">Within 24 hours</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-zinc-400">Languages</span>
-                  <span className="text-white">English, Thai</span>
-                </div>
+                {trainer.languages && trainer.languages.length > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-zinc-400">Languages</span>
+                    <span className="text-white">
+                      {trainer.languages.join(", ")}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </main>
+
+      {/* Booking Modal */}
+      {isBookingModalOpen && currentUserId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="relative bg-zinc-900 border border-zinc-700 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-zinc-900 border-b border-zinc-700 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-white">
+                Book a Session with {fullName}
+              </h2>
+              <button
+                onClick={() => setIsBookingModalOpen(false)}
+                className="text-zinc-400 hover:text-white transition text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              <BookingForm
+                trainerId={trainer.id}
+                traineeId={currentUserId}
+                hourlyRate={trainer.hourlyRate || 0}
+                onSuccess={handleBookingSuccess}
+                onCancel={() => setIsBookingModalOpen(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
