@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/Card';
-import type { TrainerProfile } from '@clinch/shared';
+import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/Card";
+import type { TrainerProfile } from "@clinch/shared";
 
 interface TrainerCardProps {
   trainer: TrainerProfile & {
@@ -16,8 +16,8 @@ interface TrainerCardProps {
 
 export function TrainerCard({ trainer }: TrainerCardProps) {
   const fullName = trainer.user
-    ? `${trainer.user.firstName || ''} ${trainer.user.lastName || ''}`.trim()
-    : 'Unknown Trainer';
+    ? `${trainer.user.firstName || ""} ${trainer.user.lastName || ""}`.trim()
+    : "Unknown Trainer";
 
   return (
     <Link href={`/browse/trainers/${trainer.id}`}>
@@ -55,16 +55,18 @@ export function TrainerCard({ trainer }: TrainerCardProps) {
               )}
 
               {/* Specialties */}
-              <div className="flex flex-wrap gap-1 mb-3">
-                {trainer.specialties.slice(0, 3).map((specialty) => (
-                  <span
-                    key={specialty}
-                    className="inline-block px-2 py-1 text-xs font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded"
-                  >
-                    {specialty.replace('_', ' ')}
-                  </span>
-                ))}
-              </div>
+              {trainer.specialties && trainer.specialties.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {trainer.specialties.slice(0, 3).map((specialty) => (
+                    <span
+                      key={specialty}
+                      className="inline-block px-2 py-1 text-xs font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded"
+                    >
+                      {specialty.replace("_", " ")}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               {/* Stats */}
               <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
