@@ -16,34 +16,24 @@ export default function OnboardingPage() {
 
     setLoading(true);
     try {
-      // Update user metadata with role
-      await user.update({
-        unsafeMetadata: {
-          role: selectedRole,
-        },
-      });
-
-      // Create user in database
-      await fetch('/api/users', {
+      // Call onboarding API to set role and create profile
+      const response = await fetch('/api/users/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clerkId: user.id,
-          email: user.primaryEmailAddress?.emailAddress,
-          firstName: user.firstName,
-          lastName: user.lastName,
           role: selectedRole,
-          imageUrl: user.imageUrl,
         }),
       });
 
-      // Redirect to profile setup based on role
-      if (selectedRole === UserRole.TRAINER) {
-        router.push('/profile/trainer/setup');
-      } else if (selectedRole === UserRole.GYM_OWNER) {
-        router.push('/profile/gym/setup');
-      } else if (selectedRole === UserRole.TRAINEE) {
-        router.push('/profile/trainee/setup');
+      if (!response.ok) {
+        throw new Error('Failed to complete onboarding');
+      }
+
+      // Redirect based on role
+      if (selectedRole === UserRole.TRAINER || selectedRole === UserRole.GYM_OWNER) {
+        router.push('/dashboard');
+      } else {
+        router.push('/browse/trainers');
       }
     } catch (error) {
       console.error('Error setting up account:', error);

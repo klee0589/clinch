@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { prisma } from '@clinch/database';
+import { supabase } from '@/lib/supabase';
 import { createUserSchema } from '@clinch/shared';
 
 export async function POST(request: NextRequest) {
@@ -14,18 +14,35 @@ export async function POST(request: NextRequest) {
     const validatedData = createUserSchema.parse(body);
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { clerkId: validatedData.clerkId },
-    });
+    const { data: existingUser } = await supabase
+      .from('User')
+      .select('*')
+      .eq('clerkId', validatedData.clerkId)
+      .single();
 
     if (existingUser) {
       return NextResponse.json(existingUser);
     }
 
     // Create new user
-    const user = await prisma.user.create({
-      data: validatedData,
-    });
+    const { data: user, error } = await supabase
+      .from('User')
+      .insert({
+        id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        ...validatedData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json(
+        { error: 'Failed to create user', details: error.message },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(user, { status: 201 });
   } catch (error) {
@@ -44,16 +61,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { clerkId: userId },
-      include: {
-        trainerProfile: true,
-        gymProfile: true,
-        traineeProfile: true,
-      },
-    });
+    const { data: user, error } = await supabase
+      .from('User')
+      .select(`
+        *,
+        trainerProfile:TrainerProfile(*),
+        gymProfile:GymProfile(*),
+        traineeProfile:TraineeProfile(*)
+      `)
+      .eq('clerkId', userId)
+      .single();
 
-    if (!user) {
+    if (error || !user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
