@@ -13,7 +13,10 @@
     "build:mobile": "npm run build --workspace=@clinch/mobile",
     "db:generate": "npm run generate --workspace=@clinch/database",
     "db:migrate": "npm run migrate --workspace=@clinch/database",
-    "db:studio": "npm run studio --workspace=@clinch/database"
+    "db:studio": "npm run studio --workspace=@clinch/database",
+    "test": "npm run test --workspace=@clinch/shared",
+    "test:web": "npm run test --workspace=@clinch/web",
+    "prepare": "husky"
   },
   "keywords": [
     "muay-thai",
@@ -24,5 +27,16 @@
   "license": "MIT",
   "dependencies": {
     "dotenv": "^17.2.3"
+  },
+  "devDependencies": {
+    "eslint": "^9.38.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.5",
+    "prettier": "^3.6.2"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write --ignore-unknown"
+    ]
   }
 }
