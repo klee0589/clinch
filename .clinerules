@@ -1,0 +1,171 @@
+# Claude Context for Clinch Project
+
+## Project Overview
+Clinch is a marketplace platform connecting Muay Thai trainers with trainees. Built as a monorepo with Next.js web app, planned React Native mobile app, and Supabase backend.
+
+## Tech Stack
+- **Frontend**: Next.js 15, React 19, Tailwind CSS 4
+- **Auth**: Clerk (clerkId stored in User table)
+- **Database**: PostgreSQL via Supabase REST API
+- **Validation**: Zod schemas in @clinch/shared
+- **Testing**: Jest (web), Vitest (shared), 38 tests with pre-commit hooks
+- **Monorepo**: npm workspaces
+
+## Critical Architecture Decisions
+
+### Database Access Pattern
+**IMPORTANT**: We use Supabase REST API directly, NOT Prisma
+- All API routes use `/api/*-supabase` naming convention
+- Prisma had P1001 connection errors, so we bypassed it
+- Direct Supabase client import: `import { supabase } from "@/lib/supabase"`
+
+### User & Profile Relationships
+**Users can have multiple roles simultaneously:**
+- `User` table: Base account (linked to Clerk via clerkId)
+- `TrainerProfile`: One-to-one with User (userId foreign key)
+- `TraineeProfile`: One-to-one with User (userId foreign key)
+- A user can be both trainer AND trainee (have both profiles)
+
+### Session Foreign Keys
+**CRITICAL**: Session table foreign keys reference PROFILE IDs, not User IDs
+- `Session.trainerId` → `TrainerProfile.id` (NOT User.id)
+- `Session.traineeId` → `TraineeProfile.id` (NOT User.id)
+- This caused a major bug when booking form passed User.id instead
+
+### Next.js 15 Breaking Changes
+- Dynamic route params must be awaited:
+```typescript
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params; // Must await!
+}
+```
+
+## Key Workflows
+
+### Booking Flow
+1. Trainee browses trainers → clicks "Book a Session"
+2. Check if user has TraineeProfile (required to book)
+3. Fetch traineeProfileId via `/api/trainee-profile?userId={userId}`
+4. Open BookingForm modal with trainerId, traineeId (profile IDs), trainerRate
+5. POST to `/api/sessions-supabase` creates Session with status=PENDING
+6. Redirect to dashboard
+
+### Dashboard Views
+- **"My Bookings" (trainee view)**: Shows sessions where user is the trainee
+- **"Booking Requests" (trainer view)**: Shows sessions where user is the trainer
+- API parameter: `?view=trainee` or `?view=trainer`
+- Filtering logic in `/api/sessions-supabase/route.ts` uses clerkId comparison
+
+### Accept/Decline Booking
+1. Trainer sees PENDING session in "Booking Requests" tab
+2. Click Accept → PATCH `/api/sessions-supabase/{id}` with status=CONFIRMED
+3. Click Decline → PATCH with status=CANCELLED
+4. UI updates optimistically (setSessions with map)
+
+## Common Errors & Solutions
+
+### Error: Foreign Key Constraint Violation (23503)
+```
+Key (traineeId)=(user_xxx) is not present in table "TraineeProfile"
+```
+**Cause**: Passing User.id instead of TraineeProfile.id
+**Fix**: Always fetch trainee profile first, use profile.id
+
+### Error: Trainee Profile Not Found (404)
+```
+GET /api/trainee-profile?userId=xxx 404
+```
+**Cause**: User selected TRAINER role in onboarding, no trainee profile created
+**Fix**: Run `add-trainee-profile.sql` with user's ID, or create new account with TRAINEE role
+
+### Error: Modal doesn't open after booking fix
+**Cause**: Missing traineeProfileId check
+**Fix**: Add validation in handleBookingClick:
+```typescript
+if (!traineeProfileId) {
+  alert("You need to have a trainee profile to book sessions...");
+  return;
+}
+```
+
+## File Structure Patterns
+
+### API Routes
+- All Supabase endpoints: `/app/api/*-supabase/`
+- GET for fetching, POST for creating, PATCH for updating
+- Always check auth: `const { userId } = await auth()`
+- Return NextResponse.json with proper status codes
+
+### Components
+- Client components need `"use client"` directive
+- Use Clerk hooks: `useUser()`, `useClerk()`
+- Supabase queries in useEffect with proper dependencies
+
+### Validation
+- Schemas in `packages/shared/src/validations/`
+- Export enums (SessionStatus, UserRole, ExperienceLevel)
+- Used in both frontend and backend
+
+## Git Workflow
+- Pre-commit hook runs all tests (must pass to commit)
+- Prettier formats code automatically
+- Commit messages: descriptive with Claude signature
+- Always check `git status` before committing
+
+## Testing Different Roles
+1. **As Trainee**: Sign up → Select "I'm looking for training" → Book sessions
+2. **As Trainer**: Sign up with different email → Select "I'm a Trainer" → Accept/decline bookings
+3. **Switch accounts**: Use "Sign Out" button in dashboard header
+
+## Database Seed Data
+- 3 trainers: Samart, Buakaw, Ramon
+- 2 gyms: Lumpinee Boxing Stadium, Tiger Muay Thai
+- Seed trainers have dummy Clerk IDs (not real accounts)
+- Create real accounts via Clerk sign-up for testing
+
+## Development Patterns
+
+### When adding new features:
+1. Update Supabase schema in `supabase-schema.sql`
+2. Add API endpoints in `packages/web/app/api/`
+3. Create/update UI components
+4. Add validation schemas in `packages/shared/src/validations/`
+5. Write tests for validations
+6. Update README.md with feature description
+7. Update this .clinerules file
+
+### When encountering Supabase errors:
+- Check server logs in terminal running `npm run dev:web`
+- Look for `Supabase error:` messages
+- Common issues: foreign key constraints, missing records, auth failures
+- Use Supabase SQL Editor to query data directly
+
+### When testing bookings:
+- Always ensure user has trainee profile before booking
+- Use dashboard view toggle to switch perspectives
+- Check session status updates in real-time
+- Verify database changes in Supabase dashboard
+
+## Future Enhancements (Not Yet Implemented)
+- Payment processing (Stripe integration)
+- Real-time messaging between users
+- Email/SMS notifications
+- Review and rating system UI
+- Profile editing forms
+- Advanced search filters
+- Calendar view for scheduling
+- Mobile app (React Native/Expo)
+
+## Port Configuration
+- Web app: http://localhost:3001
+- Database: Supabase hosted (no local port)
+
+## Environment Variables
+Located in `packages/web/.env.local`:
+- NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+- CLERK_SECRET_KEY
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+## Last Updated
+December 2025 (v0.3) - Added complete booking system, dual-view dashboard, accept/decline functionality, sign-out feature
