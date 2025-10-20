@@ -7,13 +7,16 @@
     "generate": "prisma generate",
     "migrate": "prisma migrate dev",
     "studio": "prisma studio",
-    "push": "prisma db push"
+    "push": "prisma db push",
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.2.0"
   },
   "devDependencies": {
+    "@types/node": "^24.9.0",
     "prisma": "^6.2.0",
+    "tsx": "^4.20.6",
     "typescript": "^5.7.3"
   }
 }
