@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { SessionStatus } from "@clinch/shared";
@@ -11,6 +11,7 @@ type ViewMode = "trainee" | "trainer";
 
 export default function DashboardPage() {
   const { user } = useUser();
+  const { signOut } = useClerk();
   const [viewMode, setViewMode] = useState<ViewMode>("trainee");
   const [statusFilter, setStatusFilter] = useState<string | undefined>(
     undefined,
@@ -158,12 +159,20 @@ export default function DashboardPage() {
             <Link href="/dashboard" className="text-orange-600 font-medium">
               Dashboard
             </Link>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
-                <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
-                  {user?.firstName?.charAt(0) || "U"}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                  <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
+                    {user?.firstName?.charAt(0) || "U"}
+                  </span>
+                </div>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  {user?.firstName}
                 </span>
               </div>
+              <Button size="sm" variant="ghost" onClick={() => signOut()}>
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>
