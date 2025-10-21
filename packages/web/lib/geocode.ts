@@ -17,13 +17,18 @@ export async function geocodeLocation(
   city?: string,
   state?: string,
   country?: string,
+  address?: string,
+  zipCode?: string,
 ): Promise<Coordinates | null> {
-  if (!city && !state && !country) {
+  // Build query string, prioritizing more specific information
+  const parts = address
+    ? [address, city, state, zipCode, country].filter(Boolean)
+    : [city, state, zipCode, country].filter(Boolean);
+
+  if (parts.length === 0) {
     return null;
   }
 
-  // Build query string
-  const parts = [city, state, country].filter(Boolean);
   const query = parts.join(", ");
 
   // Check cache

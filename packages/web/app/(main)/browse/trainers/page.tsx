@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTrainers } from "@/hooks/useTrainers";
 import { TrainerCard } from "@/components/trainers/TrainerCard";
@@ -19,46 +19,61 @@ export default function BrowseTrainersPage() {
   useEffect(() => {
     if (viewMode === "map" && trainers.length > 0) {
       const geocodeTrainers = async () => {
-        const markers = await Promise.all(
-          trainers.map(async (trainer: any) => {
-            // Try geocoding first
-            let coords = await geocodeLocation(
+        // Only geocode trainers that don't have cached coordinates
+        const markersPromises = trainers.map(async (trainer: any) => {
+          let coords = null;
+
+          // Use cached coordinates if available
+          if (trainer.latitude && trainer.longitude) {
+            coords = {
+              longitude: trainer.longitude,
+              latitude: trainer.latitude,
+            };
+          } else {
+            // Geocode if no cached coordinates
+            coords = await geocodeLocation(
               trainer.city,
               trainer.state,
               trainer.country,
+              trainer.address,
+              trainer.zipCode,
             );
 
             // Fallback to common city coordinates if geocoding fails
             if (!coords) {
               coords = getFallbackCoordinates(trainer.city);
             }
+          }
 
-            // If we have coordinates, create a marker
-            if (coords) {
-              return {
-                id: trainer.id,
-                longitude: coords.longitude,
-                latitude: coords.latitude,
-                title: `${trainer.user?.firstName} ${trainer.user?.lastName}`,
-                description: `${trainer.city || ""}, ${trainer.state || ""} • $${trainer.hourlyRate}/hr`,
-                color: "#FF6B35",
-              };
-            }
-            return null;
-          }),
-        );
+          // If we have coordinates, create a marker
+          if (coords) {
+            return {
+              id: trainer.id,
+              longitude: coords.longitude,
+              latitude: coords.latitude,
+              title: `${trainer.user?.firstName} ${trainer.user?.lastName}`,
+              description: `${trainer.city || ""}, ${trainer.state || ""} • $${trainer.hourlyRate}/hr`,
+              color: "#FF6B35",
+            };
+          }
+          return null;
+        });
 
-        // Filter out null markers (trainers without coordinates)
-        setMapMarkers(markers.filter((m) => m !== null));
+        const markers = await Promise.all(markersPromises);
+        const validMarkers = markers.filter((m) => m !== null);
+        setMapMarkers(validMarkers);
       };
 
       geocodeTrainers();
     }
   }, [viewMode, trainers]);
 
-  const handleMarkerClick = (trainerId: string) => {
-    router.push(`/browse/trainers/${trainerId}`);
-  };
+  const handleMarkerClick = useMemo(
+    () => (trainerId: string) => {
+      router.push(`/browse/trainers/${trainerId}`);
+    },
+    [router],
+  );
 
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">

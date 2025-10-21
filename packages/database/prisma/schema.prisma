@@ -75,9 +75,13 @@ model TrainerProfile {
   currency          String    @default("USD")
 
   // Location
+  address           String?   // Optional street address for more precise geocoding
   city              String?
   state             String?
   country           String?
+  zipCode           String?   // Optional postal code
+  latitude          Float?    // Cached coordinates
+  longitude         Float?
 
   // Availability
   availableForOnline Boolean  @default(false)

@@ -31,9 +31,11 @@ export default function ProfilePage() {
     experienceYears: 0,
     certifications: [] as string[],
     hourlyRate: 0,
+    address: "",
     city: "",
     state: "",
     country: "",
+    zipCode: "",
     availableForOnline: false,
   });
 
@@ -68,9 +70,11 @@ export default function ProfilePage() {
                 experienceYears: trainer.experienceYears || 0,
                 certifications: trainer.certifications || [],
                 hourlyRate: trainer.hourlyRate || 0,
+                address: trainer.address || "",
                 city: trainer.city || "",
                 state: trainer.state || "",
                 country: trainer.country || "",
+                zipCode: trainer.zipCode || "",
                 availableForOnline: trainer.availableForOnline || false,
               });
             }
@@ -346,51 +350,90 @@ export default function ProfilePage() {
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               📍 Add your location to appear on the map and help trainees find
-              you
+              you. The more specific your address, the better!
             </p>
-            <div className="grid md:grid-cols-3 gap-4">
+
+            <div className="space-y-4">
+              {/* Street Address */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  City *
+                  Street Address (optional but recommended)
                 </label>
                 <input
                   type="text"
-                  value={formData.city}
+                  value={formData.address}
                   onChange={(e) =>
-                    setFormData({ ...formData, city: e.target.value })
+                    setFormData({ ...formData, address: e.target.value })
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-600"
-                  placeholder="e.g., Los Angeles, Bangkok"
-                  required
+                  placeholder="e.g., 123 Main Street, Suite 100"
                 />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Adding a street address helps trainees find you more easily
+                </p>
               </div>
+
+              {/* City, State, Country */}
+              <div className="grid md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    City *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.city}
+                    onChange={(e) =>
+                      setFormData({ ...formData, city: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-600"
+                    placeholder="e.g., Los Angeles, Bangkok"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    State/Province
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.state}
+                    onChange={(e) =>
+                      setFormData({ ...formData, state: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-600"
+                    placeholder="e.g., CA, Bangkok"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Country *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.country}
+                    onChange={(e) =>
+                      setFormData({ ...formData, country: e.target.value })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-600"
+                    placeholder="e.g., USA, Thailand"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* ZIP Code */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  State/Province
+                  ZIP/Postal Code (optional)
                 </label>
                 <input
                   type="text"
-                  value={formData.state}
+                  value={formData.zipCode}
                   onChange={(e) =>
-                    setFormData({ ...formData, state: e.target.value })
+                    setFormData({ ...formData, zipCode: e.target.value })
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-600"
-                  placeholder="e.g., CA, Bangkok"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Country *
-                </label>
-                <input
-                  type="text"
-                  value={formData.country}
-                  onChange={(e) =>
-                    setFormData({ ...formData, country: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-600"
-                  placeholder="e.g., USA, Thailand"
-                  required
+                  placeholder="e.g., 90001, 10010"
                 />
               </div>
             </div>

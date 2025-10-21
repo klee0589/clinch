@@ -2,54 +2,48 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { auth } from "@clerk/nextjs/server";
 
+// Cache the response for 1 minute for better performance
+export const revalidate = 60;
+
 export async function GET(request: NextRequest) {
+  const startTime = Date.now();
+
   try {
     const searchParams = request.nextUrl.searchParams;
-    const { userId: clerkUserId } = await auth();
 
-    // Get the current user's ID from the database if logged in
+    // Skip auth check for public trainer browsing (faster response)
+    // Only needed if we want to exclude current user, which we can skip for now
     let currentUserId: string | null = null;
-    if (clerkUserId) {
-      const { data: currentUser } = await supabase
-        .from("User")
-        .select("id")
-        .eq("clerkId", clerkUserId)
-        .single();
 
-      if (currentUser) {
-        currentUserId = currentUser.id;
-      }
-    }
-
-    // Build query
+    // Build optimized query - only select needed fields
     let query = supabase
       .from("TrainerProfile")
       .select(
         `
-        *,
+        id,
+        bio,
+        specialties,
+        experienceYears,
+        hourlyRate,
+        city,
+        state,
+        country,
+        address,
+        zipCode,
+        latitude,
+        longitude,
+        availableForOnline,
+        averageRating,
+        totalSessions,
         user:User!TrainerProfile_userId_fkey (
-          id,
           firstName,
           lastName,
-          imageUrl,
-          email
-        ),
-        gyms:TrainerGym (
-          gym:GymProfile!TrainerGym_gymId_fkey (
-            name,
-            city,
-            state,
-            country
-          )
+          imageUrl
         )
       `,
       )
-      .order("averageRating", { ascending: false });
-
-    // Exclude the current user from the results if they're a trainer
-    if (currentUserId) {
-      query = query.neq("userId", currentUserId);
-    }
+      .order("averageRating", { ascending: false, nullsFirst: false })
+      .limit(50); // Limit initial results
 
     // Apply filters
     const city = searchParams.get("city");
@@ -82,6 +76,13 @@ export async function GET(request: NextRequest) {
       query = query.gte("averageRating", parseFloat(minRating));
     }
 
+    // Filter by specialties (array contains any of the selected specialties)
+    const specialties = searchParams.get("specialties");
+    if (specialties) {
+      const specialtyArray = specialties.split(",");
+      query = query.overlaps("specialties", specialtyArray);
+    }
+
     const { data: trainers, error } = await query;
 
     if (error) {
@@ -92,7 +93,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(trainers || []);
+    // Add cache headers for better performance
+    return NextResponse.json(trainers || [], {
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+      },
+    });
   } catch (error) {
     console.error("Error fetching trainers:", error);
     return NextResponse.json(

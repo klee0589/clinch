@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { apiClient } from '@/lib/api-client';
-import type { TrainerProfile } from '@clinch/shared';
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import type { TrainerProfile } from "@clinch/shared";
 
 export function useTrainers(filters?: {
   city?: string;
@@ -13,57 +13,42 @@ export function useTrainers(filters?: {
   availableForOnline?: boolean;
   minRating?: number;
 }) {
-  const [trainers, setTrainers] = useState<TrainerProfile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchTrainers() {
-      setLoading(true);
-      setError(null);
-
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["trainers", filters],
+    queryFn: async () => {
       const response = await apiClient.searchTrainers(filters);
-
       if (response.error) {
-        setError(response.error);
-      } else if (response.data) {
-        setTrainers(response.data);
+        throw new Error(response.error);
       }
+      return response.data || [];
+    },
+    staleTime: 2 * 60 * 1000, // Data stays fresh for 2 minutes
+  });
 
-      setLoading(false);
-    }
-
-    fetchTrainers();
-  }, [JSON.stringify(filters)]);
-
-  return { trainers, loading, error };
+  return {
+    trainers: data || [],
+    loading: isLoading,
+    error: error?.message || null,
+  };
 }
 
 export function useTrainer(id: string) {
-  const [trainer, setTrainer] = useState<TrainerProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchTrainer() {
-      if (!id) return;
-
-      setLoading(true);
-      setError(null);
-
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["trainer", id],
+    queryFn: async () => {
       const response = await apiClient.getTrainer(id);
-
       if (response.error) {
-        setError(response.error);
-      } else if (response.data) {
-        setTrainer(response.data);
+        throw new Error(response.error);
       }
+      return response.data || null;
+    },
+    enabled: !!id, // Only run query if id is provided
+    staleTime: 5 * 60 * 1000, // Individual trainer data stays fresh for 5 minutes
+  });
 
-      setLoading(false);
-    }
-
-    fetchTrainer();
-  }, [id]);
-
-  return { trainer, loading, error };
+  return {
+    trainer: data || null,
+    loading: isLoading,
+    error: error?.message || null,
+  };
 }

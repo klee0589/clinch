@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { Button } from '@/components/ui/Button';
-import { MuayThaiStyle } from '@clinch/shared';
+import { useState } from "react";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Button } from "@/components/ui/Button";
+import { MuayThaiStyle } from "@clinch/shared";
 
 interface TrainerFiltersProps {
   onFilterChange: (filters: {
@@ -19,19 +19,20 @@ interface TrainerFiltersProps {
 }
 
 export function TrainerFilters({ onFilterChange }: TrainerFiltersProps) {
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [minRate, setMinRate] = useState('');
-  const [maxRate, setMaxRate] = useState('');
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [minRate, setMinRate] = useState("");
+  const [maxRate, setMaxRate] = useState("");
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [onlineOnly, setOnlineOnly] = useState(false);
-  const [minRating, setMinRating] = useState('');
+  const [minRating, setMinRating] = useState("");
 
   const handleApplyFilters = () => {
     onFilterChange({
       city: city || undefined,
       state: state || undefined,
-      specialties: selectedSpecialties.length > 0 ? selectedSpecialties : undefined,
+      specialties:
+        selectedSpecialties.length > 0 ? selectedSpecialties : undefined,
       minRate: minRate ? Number(minRate) : undefined,
       maxRate: maxRate ? Number(maxRate) : undefined,
       availableForOnline: onlineOnly ? true : undefined,
@@ -40,22 +41,33 @@ export function TrainerFilters({ onFilterChange }: TrainerFiltersProps) {
   };
 
   const handleReset = () => {
-    setCity('');
-    setState('');
-    setMinRate('');
-    setMaxRate('');
+    setCity("");
+    setState("");
+    setMinRate("");
+    setMaxRate("");
     setSelectedSpecialties([]);
     setOnlineOnly(false);
-    setMinRating('');
+    setMinRating("");
     onFilterChange({});
   };
 
   const toggleSpecialty = (specialty: string) => {
-    setSelectedSpecialties(prev =>
-      prev.includes(specialty)
-        ? prev.filter(s => s !== specialty)
-        : [...prev, specialty]
-    );
+    const newSpecialties = selectedSpecialties.includes(specialty)
+      ? selectedSpecialties.filter((s) => s !== specialty)
+      : [...selectedSpecialties, specialty];
+
+    setSelectedSpecialties(newSpecialties);
+
+    // Auto-apply filters when specialty changes
+    onFilterChange({
+      city: city || undefined,
+      state: state || undefined,
+      specialties: newSpecialties.length > 0 ? newSpecialties : undefined,
+      minRate: minRate ? Number(minRate) : undefined,
+      maxRate: maxRate ? Number(maxRate) : undefined,
+      availableForOnline: onlineOnly ? true : undefined,
+      minRating: minRating ? Number(minRating) : undefined,
+    });
   };
 
   return (
@@ -105,9 +117,9 @@ export function TrainerFilters({ onFilterChange }: TrainerFiltersProps) {
           value={minRating}
           onChange={(e) => setMinRating(e.target.value)}
           options={[
-            { value: '', label: 'Any rating' },
-            { value: '4', label: '4+ stars' },
-            { value: '4.5', label: '4.5+ stars' },
+            { value: "", label: "Any rating" },
+            { value: "4", label: "4+ stars" },
+            { value: "4.5", label: "4.5+ stars" },
           ]}
         />
 
@@ -123,13 +135,14 @@ export function TrainerFilters({ onFilterChange }: TrainerFiltersProps) {
                 onClick={() => toggleSpecialty(specialty)}
                 className={`
                   px-3 py-1 text-sm rounded-full transition-colors
-                  ${selectedSpecialties.includes(specialty)
-                    ? 'bg-orange-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ${
+                    selectedSpecialties.includes(specialty)
+                      ? "bg-orange-600 text-white"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }
                 `}
               >
-                {specialty.replace('_', ' ')}
+                {specialty.replace("_", " ")}
               </button>
             ))}
           </div>
