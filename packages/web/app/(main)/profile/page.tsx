@@ -341,13 +341,17 @@ export default function ProfilePage() {
         {/* Location */}
         <Card>
           <CardContent className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               Location
             </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              📍 Add your location to appear on the map and help trainees find
+              you
+            </p>
             <div className="grid md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  City
+                  City *
                 </label>
                 <input
                   type="text"
@@ -356,7 +360,8 @@ export default function ProfilePage() {
                     setFormData({ ...formData, city: e.target.value })
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-600"
-                  placeholder="Bangkok"
+                  placeholder="e.g., Los Angeles, Bangkok"
+                  required
                 />
               </div>
               <div>
@@ -370,12 +375,12 @@ export default function ProfilePage() {
                     setFormData({ ...formData, state: e.target.value })
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-600"
-                  placeholder="Bangkok"
+                  placeholder="e.g., CA, Bangkok"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Country
+                  Country *
                 </label>
                 <input
                   type="text"
@@ -384,7 +389,8 @@ export default function ProfilePage() {
                     setFormData({ ...formData, country: e.target.value })
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-600"
-                  placeholder="Thailand"
+                  placeholder="e.g., USA, Thailand"
+                  required
                 />
               </div>
             </div>
