@@ -1,4 +1,9 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { Map } from "@/components/map/Map";
+import { geocodeLocation, getFallbackCoordinates } from "@/lib/geocode";
 
 // Mock gym data
 const mockGym = {
@@ -75,6 +80,37 @@ const schedule = [
 ];
 
 export default function GymDetailPage() {
+  const [mapMarker, setMapMarker] = useState<any>(null);
+
+  // Geocode gym location for map
+  useEffect(() => {
+    async function geocodeGym() {
+      if (!mockGym.city) return;
+
+      // Try geocoding first
+      let coords = await geocodeLocation(mockGym.city, mockGym.state, "USA");
+
+      // Fallback to common city coordinates if geocoding fails
+      if (!coords) {
+        coords = getFallbackCoordinates(mockGym.city);
+      }
+
+      // If we have coordinates, create a marker
+      if (coords) {
+        setMapMarker({
+          id: mockGym.id,
+          longitude: coords.longitude,
+          latitude: coords.latitude,
+          title: mockGym.name,
+          description: `${mockGym.city}, ${mockGym.state} • $${mockGym.membershipFee}/mo`,
+          color: "#FF6B35",
+        });
+      }
+    }
+
+    geocodeGym();
+  }, []);
+
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Back Button */}
@@ -197,6 +233,19 @@ export default function GymDetailPage() {
               ))}
             </div>
           </div>
+
+          {/* Location Map */}
+          {mapMarker && (
+            <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-8">
+              <h2 className="text-2xl font-bold text-white mb-4">Location</h2>
+              <Map
+                markers={[mapMarker]}
+                center={[mapMarker.longitude, mapMarker.latitude]}
+                height="400px"
+                zoom={14}
+              />
+            </div>
+          )}
 
           {/* Reviews */}
           <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-8">

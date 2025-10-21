@@ -6,6 +6,8 @@ import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { apiClient } from "@/lib/api-client";
 import { BookingForm } from "@/components/sessions/BookingForm";
+import { Map } from "@/components/map/Map";
+import { geocodeLocation, getFallbackCoordinates } from "@/lib/geocode";
 import type { TrainerProfile } from "@clinch/shared";
 
 interface TrainerWithUser extends TrainerProfile {
@@ -35,6 +37,7 @@ export default function TrainerDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [traineeProfileId, setTraineeProfileId] = useState<string | null>(null);
+  const [mapMarker, setMapMarker] = useState<any>(null);
 
   const trainerId = params.id as string;
 
@@ -87,6 +90,44 @@ export default function TrainerDetailPage() {
 
     fetchTraineeProfile();
   }, [clerkUser]);
+
+  // Geocode trainer location for map
+  useEffect(() => {
+    async function geocodeTrainer() {
+      if (!trainer || !trainer.city) return;
+
+      // Try geocoding first
+      let coords = await geocodeLocation(
+        trainer.city,
+        trainer.state,
+        trainer.country,
+      );
+
+      // Fallback to common city coordinates if geocoding fails
+      if (!coords) {
+        coords = getFallbackCoordinates(trainer.city);
+      }
+
+      // If we have coordinates, create a marker
+      if (coords) {
+        const fullName = trainer.user
+          ? `${trainer.user.firstName || ""} ${trainer.user.lastName || ""}`.trim() ||
+            "Unknown Trainer"
+          : "Unknown Trainer";
+
+        setMapMarker({
+          id: trainer.id,
+          longitude: coords.longitude,
+          latitude: coords.latitude,
+          title: fullName,
+          description: `${trainer.city || ""}, ${trainer.state || ""} • $${trainer.hourlyRate}/hr`,
+          color: "#FF6B35",
+        });
+      }
+    }
+
+    geocodeTrainer();
+  }, [trainer]);
 
   const handleBookingClick = () => {
     if (!clerkUser) {
@@ -275,6 +316,19 @@ export default function TrainerDetailPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Location Map */}
+            {mapMarker && (
+              <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-8">
+                <h2 className="text-2xl font-bold text-white mb-4">Location</h2>
+                <Map
+                  markers={[mapMarker]}
+                  center={[mapMarker.longitude, mapMarker.latitude]}
+                  height="400px"
+                  zoom={11}
+                />
               </div>
             )}
           </div>
