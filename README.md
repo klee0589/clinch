@@ -1,6 +1,6 @@
-# Clinch - Muay Thai Trainer Marketplace
+# 🥊 Clinch - Muay Thai Trainer Marketplace
 
-A modern marketplace platform connecting Muay Thai trainers, trainees, and gyms.
+> A modern platform bringing together passionate Muay Thai trainers, dedicated trainees, and world-class gyms. Train anywhere, anytime - on web or mobile.
 
 ## Project Structure
 
@@ -15,48 +15,57 @@ clinch/
 └── SQL scripts/      # Database setup and seed scripts
 ```
 
-## Tech Stack
+## 🚀 Tech Stack
 
-- **Frontend**: Next.js 15, React 19, Tailwind CSS 4
-- **Mobile**: React Native with Expo 54, React Navigation 7, React Native Paper
-- **Authentication**: Clerk
-- **Database**: PostgreSQL (Supabase) with direct REST API client
-- **Validation**: Zod
-- **Testing**: Jest (web), Vitest (shared)
-- **Monorepo**: npm workspaces
-- **CI/CD**: Husky pre-commit hooks with automated testing
+| Layer | Technology | Why We Love It |
+|-------|-----------|----------------|
+| **Web Frontend** | Next.js 15 + React 19 + Tailwind CSS 4 | Blazing fast, modern, beautiful |
+| **Mobile** | React Native + Expo 54 | Native feel, instant updates |
+| **UI Components** | React Native Paper | Material Design, dark mode ready |
+| **Navigation** | React Navigation 7 | Smooth, native transitions |
+| **Auth** | Clerk | Passwordless magic, secure by default |
+| **Database** | PostgreSQL (Supabase) | Powerful, real-time, open source |
+| **API** | REST with Supabase client | Fast, type-safe, shared across platforms |
+| **Validation** | Zod | Runtime type safety, great DX |
+| **Testing** | Jest + Vitest | 38 passing tests, pre-commit hooks |
+| **Workspace** | npm workspaces | Monorepo done right |
 
-## Getting Started
+## ⚡ Quick Start
 
-### Prerequisites
+### What You'll Need
 
-- Node.js 18+ and npm
-- PostgreSQL database (Supabase)
-- Clerk account for authentication
+- ☑️ Node.js 18+ and npm
+- ☑️ A free Supabase account (PostgreSQL magic)
+- ☑️ A free Clerk account (auth wizardry)
+- ☑️ (Optional) Your phone with Expo Go for mobile testing
 
-### 1. Clone and Install
+### 1. Get the Code Running
 
 ```bash
 cd clinch
-npm install
+npm install  # Grab all dependencies (~2 minutes)
 ```
 
-### 2. Set Up Supabase
+### 2. Set Up Supabase (Your Database)
 
-1. Create a project at [supabase.com](https://supabase.com)
-2. Run the SQL scripts in Supabase SQL Editor:
-   - `supabase-schema.sql` - Creates all tables, enums, and indexes
-   - `supabase-seed.sql` - Seeds sample data (3 trainers, 2 gyms, etc.)
-3. Get your project URL and anon key from Project Settings → API
+1. Head to [supabase.com](https://supabase.com) and create a free project
+2. Open the SQL Editor and run these scripts in order:
+   - `SQL scripts/supabase-schema.sql` - Creates your data structure (tables, relationships, the works)
+   - `SQL scripts/supabase-seed.sql` - Adds sample data (3 trainers, 2 gyms ready to explore)
+3. Grab your credentials from Project Settings → API
+   - Project URL
+   - Anon/public key
 
-### 3. Set Up Clerk
+### 3. Set Up Clerk (Authentication Magic)
 
-1. Create an account at [clerk.com](https://clerk.com)
-2. Create a new application
-3. Get your publishable and secret keys from the API Keys section
-4. In Clerk Dashboard:
-   - Go to User & Authentication → Email, Phone, Username → Enable email
-   - Configure OAuth providers (Google, etc.) if desired
+1. Sign up at [clerk.com](https://clerk.com) - it's free and takes 2 minutes
+2. Create a new application (name it "Clinch" or whatever you fancy)
+3. Snag your publishable and secret keys from the API Keys section
+4. Configure authentication methods:
+   - Navigate to User & Authentication → Email, Phone, Username
+   - Enable "Email address"
+   - Toggle on "Email verification code" for that passwordless experience
+   - (Optional) Add OAuth providers like Google for social sign-in
 
 ### 4. Configure Environment Variables
 
@@ -102,107 +111,107 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 # 3. Execute in SQL Editor
 ```
 
-### 6. Configure Mobile App
+### 6. Configure Mobile App (Optional but Awesome)
 
-#### Mobile Package
+Want the mobile experience? It's the same backend, same auth - just a different view.
+
 ```bash
 cd packages/mobile
 ```
 
-Create or edit `config.ts` and add your Clerk publishable key:
+Edit `config.ts` with your Clerk key:
 ```typescript
 export const config = {
   clerk: {
-    publishableKey: 'pk_test_...',  // Same key as web
+    publishableKey: 'pk_test_...',  // Same key from step 3!
   },
   api: {
-    baseUrl: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3003/api',
+    baseUrl: 'http://localhost:3003/api',  // Points to your web server
   },
 };
 ```
 
-**Note**: Mobile uses the same Clerk account as web. No additional configuration needed.
+**Pro tip**: Web and mobile share everything - one Clerk account, one database, one codebase. Beautiful, right?
 
-### 7. Run Development Servers
+### 7. Fire It Up! 🔥
 
+**Start the web app:**
 ```bash
-# Web app (runs on http://localhost:3003)
 npm run dev:web
-
-# Mobile app (opens Expo dev tools)
-npm run dev:mobile
 ```
+→ Opens at `http://localhost:3003` - your command center
 
-**Running Both Apps:**
-- Web and mobile share the same backend API
-- Start web first (required for API)
-- Then start mobile to connect to web's API
-- Mobile will prompt to scan QR code with Expo Go app (iOS/Android)
+**Start mobile (optional):**
+```bash
+npm run dev:mobile  # In a new terminal
+```
+→ Shows a QR code - magic portal to your phone
 
-**Testing Mobile:**
-1. Install Expo Go app on your phone (iOS/Android)
-2. Scan QR code from terminal
-3. App loads with same data as web
-4. Sign in with same account from web
+**Using the mobile app:**
+1. Install "Expo Go" from App Store or Play Store
+2. **iOS**: Point your Camera app at the QR code
+3. **Android**: Open Expo Go, tap "Scan QR code"
+4. Watch it load on your phone - same data, native feel
+5. Sign in with the same account you created on web
 
-### 8. Create Test Account
+**The beauty**: Both apps hit the same API, use the same database. Create a booking on web, see it on mobile instantly.
 
-1. Navigate to http://localhost:3001
-2. Click "Get Started" to sign up
-3. Complete onboarding and select your role:
-   - **Trainee**: To book sessions with trainers
-   - **Trainer**: To receive and manage booking requests
-   - **Gym Owner**: To manage gym profile (future feature)
+### 8. Create Your First Account
 
-## Features
+1. Head to `http://localhost:3003`
+2. Hit "Get Started" - let's create something
+3. Choose your path:
+   - 🥋 **Trainee**: Looking to learn and book sessions
+   - 💪 **Trainer**: Share your knowledge, manage bookings
+   - 🏢 **Gym Owner**: Manage your facility (coming soon)
 
-### ✅ Implemented Features (MVP v0.4)
+## ✨ What's Built (v0.4 - Mobile Launch Edition)
 
-#### Authentication & Onboarding
-- User authentication with Clerk (sign-up, sign-in, sign-out)
-  - **Web & Mobile**: Passwordless email code authentication (default)
-  - **Mobile**: Optional password sign-in with toggle
-  - Email verification for new accounts
-  - Secure token storage with expo-secure-store (mobile)
-- Role-based onboarding (Trainee, Trainer, Gym Owner)
-- Automatic profile creation based on role selection
-- User session management with Clerk
-- Shared authentication across web and mobile
+### 🔐 Authentication & Onboarding
+The modern way - passwordless by default, secure by design.
 
-#### Browse & Discovery
-- Browse trainers page with real-time filtering
-  - Filter by city, state, rate range, online availability
-  - Sort by rating, experience, hourly rate
-  - **User exclusion**: Your own profile hidden from browse results
-- Browse gyms page with search capabilities
-- Trainer detail pages with full profile information
-  - Bio, certifications, specialties, experience
-  - Training locations, pricing, availability
-  - User profile integration with Clerk data
-- Gym detail pages with amenities and pricing
-- **Mobile**: Pull-to-refresh functionality, native scrolling
+- **Passwordless Email Codes**: No passwords to remember (web & mobile)
+- **Optional Password Auth**: Toggle available on mobile for flexibility
+- **Email Verification**: Secure 6-digit codes for new accounts
+- **Secure Storage**: Tokens safely stored with expo-secure-store on mobile
+- **Role Selection**: Choose your path - Trainee, Trainer, or Gym Owner
+- **Auto Profile Creation**: Your profile is ready the moment you sign up
+- **Shared Sessions**: Sign in once, use anywhere - web or mobile
 
-#### Booking System (Complete End-to-End)
-- **Book Sessions**: Trainees can book sessions with trainers
-  - Date/time picker with validation
-  - Duration selection (30min - 3 hours)
-  - Online vs in-person toggle
-  - Location input for in-person sessions
-  - Notes field for special requests
-  - Real-time price calculation
-  - **Available on both web and mobile**
-- **Manage Bookings**: Dual-view dashboard
-  - "My Bookings" view: See sessions you've booked as trainee
-  - "Booking Requests" view: See incoming requests as trainer
-  - Accept/Decline buttons for trainers
-  - Real-time status updates (PENDING → CONFIRMED/CANCELLED)
-  - Filter by status (All, Pending, Confirmed, Completed)
-  - **Mobile**: Native list views with swipe gestures
-- **Session Details**: Complete session information
-  - Trainer/Trainee info with profile pictures
-  - Date, time, duration, location
-  - Price breakdown and payment status
-  - Status badges with color coding
+### 🔍 Browse & Discovery
+Find the perfect trainer or gym for your journey.
+
+- **Smart Filtering**: Search by city, state, rate, online availability
+- **Smart Sorting**: By rating, experience, or price
+- **Clean Results**: You won't see yourself in the trainer list (that'd be weird)
+- **Rich Profiles**: See bios, certifications, specialties, experience, pricing
+- **Gym Listings**: Browse facilities with amenities and pricing
+- **Native Mobile Feel**: Pull-to-refresh, smooth scrolling, instant load
+
+### 📅 Booking System
+The complete flow - from discovery to done.
+
+**For Trainees:**
+- Book sessions in seconds with your favorite trainers
+- Pick dates, times, duration (30min to 3 hours)
+- Choose online or in-person training
+- Add notes for your trainer
+- Watch the price calculate in real-time
+- Available on web and mobile
+
+**For Trainers:**
+- View all incoming booking requests
+- Accept or decline with one tap
+- See trainee details and session info
+- Manage your schedule effortlessly
+
+**Dual Dashboard Views:**
+- **My Bookings**: Your training sessions as a trainee
+- **Booking Requests**: Incoming requests as a trainer
+- Filter by status: All, Pending, Confirmed, Completed
+- Real-time status updates (no refresh needed)
+- Color-coded status badges for quick scanning
+- Native mobile lists with smooth animations
 
 #### Database & API
 - Complete Supabase database schema with 8 tables
@@ -264,33 +273,41 @@ npm run dev:mobile
 - Calendar view for session scheduling
 - Trainer availability management
 
-### 📱 Mobile App (Implemented)
+### 📱 Mobile App - Your Gym in Your Pocket
 
-- **Full feature parity with web app**
-  - Browse trainers with search and filters
-  - View detailed trainer profiles
-  - Book sessions (date, time, duration, online/in-person)
-  - Trainee dashboard: View your bookings
-  - Trainer dashboard: Manage booking requests (accept/decline)
-  - Profile management with sign out
-- **Native mobile experience**
-  - React Native Paper UI components
-  - Bottom tab navigation
-  - Dark mode theme
-  - Fast performance with Expo
-- **Same authentication & API** as web app
+Everything you love about the web, now native on iOS and Android.
 
-### 📋 Planned Features
+**Complete Feature Set:**
+- Browse trainers anywhere, anytime
+- View rich trainer profiles with all the details
+- Book sessions on the go
+- Manage your training schedule
+- Accept/decline bookings as a trainer
+- Profile management and sign out
 
-- Video calling for online sessions
-- Push notifications for booking updates
-- In-app messaging between users
-- Workout tracking and progress
-- Photo/video upload for profiles
-- Gym membership management
-- Class scheduling for gyms
-- Admin dashboard
-- Analytics and reporting
+**Native Experience:**
+- Material Design with React Native Paper
+- Buttery smooth bottom tab navigation
+- Dark mode that's easy on the eyes
+- Lightning fast with Expo
+- Pull-to-refresh everywhere
+- Native scrolling and animations
+
+**The Magic:** Same Clerk auth, same API, same database as web. Start a booking on your laptop, finish it on your phone.
+
+### 🚧 Coming Soon
+
+The roadmap is exciting. Here's what's next:
+
+- 📹 **Video Calling**: Face-to-face training for online sessions
+- 🔔 **Push Notifications**: Never miss a booking update (mobile)
+- 💬 **In-App Messaging**: Chat with your trainer or trainee
+- 📊 **Progress Tracking**: Log workouts, track your journey
+- 📸 **Media Uploads**: Add photos and videos to your profile
+- 🏋️ **Gym Memberships**: Manage subscriptions and access
+- 🗓️ **Class Scheduling**: Group classes for gyms
+- 🎛️ **Admin Dashboard**: Platform management tools
+- 📈 **Analytics**: Insights for trainers and gym owners
 
 ## Database Schema
 
@@ -471,27 +488,28 @@ This is a private project. For questions or issues, contact the development team
 
 MIT
 
-## Recent Updates
+## 🎉 Recent Updates
 
-**January 2025 (v0.4)**
-- **Mobile App Launch**: Complete React Native mobile app with full feature parity
-  - Native iOS/Android apps built with Expo 54
-  - Email code authentication (passwordless) matching web experience
-  - Browse trainers with search and filters
-  - Session booking with date/time selection
-  - Dual-view dashboard (trainee/trainer)
-  - Profile management with sign out
-  - React Native Paper UI with dark theme
-  - Same backend API as web app
-- **Trainer Profile Management**: Complete editing interface for trainers
-  - Edit bio, specialties, certifications, experience, rates
-  - Location settings and online availability
-  - Accessible via user menu dropdown
-- **User Experience Improvements**:
-  - Users no longer see their own profile in trainer browse list
-  - Consistent navigation across web and mobile
-  - Email verification flow for new accounts
-  - Toggle between email code and password sign-in
+### v0.4 - Mobile Launch Edition (January 2025)
+
+**🚀 Mobile App is Live!**
+- Native iOS and Android apps with complete feature parity
+- Built with Expo 54 and React Native Paper
+- Passwordless authentication (just like the web)
+- Browse, book, and manage - all from your phone
+- Pull-to-refresh, native scrolling, dark mode
+- Same backend, same data, different device
+
+**✨ Trainer Features:**
+- Full profile editing - update your bio, rates, specialties
+- Manage certifications and availability
+- Access everything from the user menu
+
+**🔧 UX Polish:**
+- Your profile won't show up when browsing trainers anymore
+- Smoother email verification flow
+- Password toggle option for mobile flexibility
+- Consistent navigation everywhere
 
 **December 2025 (v0.3)**
 - Implemented complete booking system with session creation

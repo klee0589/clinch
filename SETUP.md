@@ -1,57 +1,66 @@
-# Quick Setup Guide
+# 🥊 Clinch - Quick Setup Guide
 
-## Getting Started
+> Get your Muay Thai marketplace running in 15 minutes. Web + Mobile. Let's go!
 
-This guide will help you set up both the **web** and **mobile** apps for the Clinch platform.
+## ⚡ What You're Building
 
-## Prerequisites
+You're about to set up a complete, production-ready marketplace that works on:
+- 💻 **Web** - Next.js 15 with Tailwind CSS
+- 📱 **Mobile** - Native iOS & Android with Expo
 
-- Node.js 18+ and npm
-- For mobile: iOS device with Expo Go app OR Android device with Expo Go app
-- Clerk account (free)
-- Supabase account (free)
+Both apps share the same backend, auth, and database. Write code once, deploy everywhere.
 
-## What's Available
+## 📋 Before You Start
 
-### Web App (http://localhost:3003)
-- Browse trainers and gyms
-- Create and manage bookings
+Grab these free accounts (5 minutes total):
+- ✅ Node.js 18+ and npm (check: `node --version`)
+- ✅ [Clerk account](https://clerk.com) - Authentication magic
+- ✅ [Supabase account](https://supabase.com) - PostgreSQL database
+- ✅ (Optional) Phone with Expo Go app for mobile testing
+
+## 🎯 What You'll Have When Done
+
+### 💻 Web App (`http://localhost:3003`)
+- Beautiful trainer and gym marketplace
+- Complete booking system (create, manage, accept/decline)
 - Trainer profile editing
-- Dual-view dashboard (trainee/trainer)
-- Role-based authentication
+- Dual dashboard views (trainee + trainer perspectives)
+- Passwordless authentication with email codes
 
-### Mobile App (iOS/Android)
-- Full feature parity with web
-- Browse trainers with search
-- Book sessions
-- Manage bookings
-- Profile management
-- Native mobile experience
+### 📱 Mobile App (iOS & Android)
+- Everything from the web, now in your pocket
+- Native feel with smooth animations
+- Pull-to-refresh, bottom tabs, dark mode
+- Same account works on both web and mobile
+- Start booking on laptop, finish on phone
 
-## Setup Steps
+---
 
-### 1. Install Dependencies
+## 🚀 Let's Build This Thing
+
+### Step 1: Install Dependencies (2 minutes)
 
 ```bash
 cd clinch
-npm install
+npm install  # Installs web, mobile, shared packages
 ```
 
-### 2. Set Up Clerk (5 minutes)
+☕ Grab a coffee. This installs ~1500 packages (monorepo life).
 
-**Why:** Enables user authentication for web and mobile
+### Step 2: Set Up Clerk (3 minutes)
 
-**Steps:**
-1. Go to https://dashboard.clerk.com/sign-up
-2. Create a free account
+**What it does:** Passwordless authentication for web + mobile. No passwords, no problems.
+
+1. Hit up [dashboard.clerk.com/sign-up](https://dashboard.clerk.com/sign-up)
+2. Create your free account (you'll love it)
 3. Click "+ Create application"
-4. Name: "Clinch"
-5. Select "Email" as auth method
-6. Configure authentication methods:
-   - Go to "User & Authentication" → "Email, Phone, Username"
-   - Enable "Email address"
-   - Toggle "Email verification code" (for passwordless auth)
-7. Copy the keys shown
+4. Name it "Clinch" (or "Awesome Muay Thai App", your call)
+5. Pick "Email" as your auth method
+6. Fine-tune it:
+   - Navigate to "User & Authentication" → "Email, Phone, Username"
+   - Toggle on "Email address"
+   - Enable "Email verification code" (the magic passwordless bit)
+7. Grab your keys from the dashboard
 
 **Configure Web App:**
 ```bash
@@ -86,117 +95,124 @@ export const config = {
 };
 ```
 
-**Note**: Mobile and web share the same Clerk account.
+**Pro tip:** Mobile and web use the SAME Clerk keys. Copy once, use everywhere. 🎯
 
-### 3. Set Up Supabase (10 minutes)
+### Step 3: Set Up Supabase (5 minutes)
 
-**Why:** Provides PostgreSQL database for storing all app data
+**What it does:** Your PostgreSQL database, hosted and ready. Stores users, trainers, sessions, all the good stuff.
 
-**Steps:**
-1. Go to https://supabase.com/dashboard
-2. Create free account
+#### Create the Project
+1. Go to [supabase.com/dashboard](https://supabase.com/dashboard)
+2. Sign up (free tier is generous)
 3. Click "+ New project"
-4. Project name: "clinch"
-5. Set a strong database password (SAVE THIS!)
-6. Select region closest to you
-7. Wait ~2 minutes for project creation
+4. Name: "clinch" (or whatever speaks to you)
+5. Set a strong password and SAVE IT (you'll need this later)
+6. Pick a region close to you (lower latency = happy users)
+7. Wait ~2 minutes while Supabase spins up your database ☕
 
-**Get API Credentials:**
-1. Go to Project Settings (⚙️) → API
-2. Copy "Project URL"
-3. Copy "anon public" key
+#### Get Your Keys
+1. Open Project Settings (⚙️ icon) → API tab
+2. Copy your "Project URL"
+3. Copy your "anon public" key
 
-**Add to web `.env.local`:**
+#### Configure the Web App
+Add these to `packages/web/.env.local`:
 ```env
-# Add these to your existing .env.local
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+# Add to existing file
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
-**Initialize Database Schema:**
-1. Go to SQL Editor in Supabase dashboard
-2. Open `SQL scripts/supabase-schema.sql` from the project
-3. Copy entire contents
+#### Create the Database Tables
+1. In Supabase dashboard, open the **SQL Editor** (left sidebar)
+2. Open `SQL scripts/supabase-schema.sql` from your project
+3. Copy all the SQL
 4. Paste into SQL Editor
-5. Click "Run"
+5. Hit "Run" and watch the magic happen ✨
 
-**Seed Sample Data (Optional):**
+This creates 8 tables: User, TrainerProfile, GymProfile, TraineeProfile, Session, Review, Message, TrainerGym.
+
+#### Add Sample Data (Recommended)
 1. Open `SQL scripts/supabase-seed.sql`
-2. Copy contents
-3. Paste into SQL Editor
-4. Click "Run"
+2. Copy, paste into SQL Editor, Run
+3. You now have 3 sample trainers, 2 gyms, ready to explore
 
-This creates 3 sample trainers, 2 gyms, and test data.
+#### Verify It Worked
+- Click "Table Editor" in Supabase sidebar
+- You should see all 8 tables populated
+- 🎉 Database is live!
 
-**Verify:**
-- Go to Table Editor in Supabase
-- You should see: User, TrainerProfile, GymProfile, Session, etc.
+### Step 4: Launch! 🚀
 
-Now the database is fully set up!
-
-### 4. Run the Apps
-
-**Start Web Server:**
+#### Start the Web App
 ```bash
 npm run dev:web
 ```
 
-Web app will be available at: http://localhost:3003
+💥 Opens at `http://localhost:3003`
 
-**Start Mobile App (in a new terminal):**
+You should see the Clinch homepage. Click around, browse trainers, check out the UI.
+
+#### Start Mobile (Optional)
+Open a NEW terminal:
 ```bash
 npm run dev:mobile
 ```
 
-This will:
-1. Start Expo Metro bundler
-2. Show QR code in terminal
-3. Show connection options
+This fires up the Expo Metro bundler and shows you a QR code.
 
-**Connect Your Phone:**
-1. Install "Expo Go" app from App Store (iOS) or Play Store (Android)
-2. **iOS**: Open Camera app, scan QR code
-3. **Android**: Open Expo Go app, tap "Scan QR code"
-4. Mobile app will load on your phone
+#### Connect Your Phone
+1. Install "Expo Go" from App Store (iOS) or Play Store (Android)
+2. **iOS users**: Open your Camera app, point at the QR code
+3. **Android users**: Open Expo Go, tap "Scan QR code"
+4. Watch your app load on your phone 📱
 
-## Testing the Apps
+**Note**: Phone and computer must be on the same WiFi network.
 
-### Web App (http://localhost:3003)
+---
 
-1. **Sign Up Flow:**
-   - Click "Get Started"
-   - Enter email (will receive verification code)
-   - Check your email for 6-digit code
-   - Enter code to verify
-   - Complete onboarding: select role (Trainee/Trainer/Gym Owner)
+## 🧪 Test Drive Your Platform
 
-2. **Browse Trainers:**
-   - Navigate to Browse → Trainers
-   - Use filters (city, rate, online availability)
-   - Click on a trainer to see full profile
+### Web App Flow
 
-3. **Book a Session:**
-   - On trainer profile, click "Book Session"
-   - Select date, time, duration
-   - Choose online or in-person
-   - Submit booking
+#### 1. Create Your Account
+- Hit "Get Started" at `http://localhost:3003`
+- Enter your email
+- Check your inbox for a 6-digit code (passwordless magic!)
+- Verify and choose your role:
+  - 🥋 **Trainee**: Book and train
+  - 💪 **Trainer**: Teach and earn
+  - 🏢 **Gym Owner**: Coming soon
 
-4. **View Dashboard:**
-   - Go to Dashboard
-   - **As Trainee**: See your bookings in "My Bookings"
-   - **As Trainer**: See incoming requests in "Booking Requests"
-   - Accept or decline bookings
+#### 2. Explore the Marketplace
+- Click "Browse" → "Trainers"
+- Try the filters: city, rate range, online availability
+- Click a trainer to see their full profile (bio, certs, pricing)
 
-### Mobile App
+#### 3. Book a Session
+- On any trainer profile, click "Book Session"
+- Pick a date, time, and duration
+- Choose online or in-person
+- Add notes if you want
+- Submit and watch the price calculate
 
-Test the same flows on mobile:
-1. Sign in with same account from web
-2. Browse trainers
-3. Book sessions
-4. View dashboard
-5. Edit profile
+#### 4. Manage Your Schedule
+- Navigate to "Dashboard"
+- **As Trainee**: View "My Bookings" - sessions you've booked
+- **As Trainer**: Check "Booking Requests" - incoming bookings to accept/decline
+- Filter by status, watch real-time updates
 
-**Note**: Mobile and web share the same backend, so all data syncs automatically.
+### Mobile App Experience
+
+Try the same flows on your phone:
+1. Open the app via Expo Go
+2. Sign in with the SAME account you just created on web
+3. Browse trainers (pull down to refresh - feels native!)
+4. Book a session
+5. Check your dashboard
+6. Notice how data syncs instantly between web and mobile
+
+**The sync is real:** Book on web, see it on mobile. Accept a booking on mobile, see it update on web. Same database, same auth, different devices.
 
 ## Troubleshooting
 
