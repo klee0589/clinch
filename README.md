@@ -8,7 +8,7 @@ A modern marketplace platform connecting Muay Thai trainers, trainees, and gyms.
 clinch/
 ├── packages/
 │   ├── web/          # Next.js web application
-│   ├── mobile/       # React Native Expo app (not implemented yet)
+│   ├── mobile/       # React Native Expo app (fully functional)
 │   ├── database/     # Prisma database schema and client
 │   └── shared/       # Shared TypeScript types and validations
 ├── .husky/           # Git hooks for pre-commit testing
@@ -18,7 +18,7 @@ clinch/
 ## Tech Stack
 
 - **Frontend**: Next.js 15, React 19, Tailwind CSS 4
-- **Mobile**: React Native with Expo (planned)
+- **Mobile**: React Native with Expo 54, React Navigation 7, React Native Paper
 - **Authentication**: Clerk
 - **Database**: PostgreSQL (Supabase) with direct REST API client
 - **Validation**: Zod
@@ -102,14 +102,50 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 # 3. Execute in SQL Editor
 ```
 
-### 6. Run Development Server
+### 6. Configure Mobile App
 
+#### Mobile Package
 ```bash
-# Web app (runs on http://localhost:3001)
-npm run dev:web
+cd packages/mobile
 ```
 
-### 7. Create Test Account
+Create or edit `config.ts` and add your Clerk publishable key:
+```typescript
+export const config = {
+  clerk: {
+    publishableKey: 'pk_test_...',  // Same key as web
+  },
+  api: {
+    baseUrl: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3003/api',
+  },
+};
+```
+
+**Note**: Mobile uses the same Clerk account as web. No additional configuration needed.
+
+### 7. Run Development Servers
+
+```bash
+# Web app (runs on http://localhost:3003)
+npm run dev:web
+
+# Mobile app (opens Expo dev tools)
+npm run dev:mobile
+```
+
+**Running Both Apps:**
+- Web and mobile share the same backend API
+- Start web first (required for API)
+- Then start mobile to connect to web's API
+- Mobile will prompt to scan QR code with Expo Go app (iOS/Android)
+
+**Testing Mobile:**
+1. Install Expo Go app on your phone (iOS/Android)
+2. Scan QR code from terminal
+3. App loads with same data as web
+4. Sign in with same account from web
+
+### 8. Create Test Account
 
 1. Navigate to http://localhost:3001
 2. Click "Get Started" to sign up
@@ -120,24 +156,31 @@ npm run dev:web
 
 ## Features
 
-### ✅ Implemented Features (MVP v0.3)
+### ✅ Implemented Features (MVP v0.4)
 
 #### Authentication & Onboarding
 - User authentication with Clerk (sign-up, sign-in, sign-out)
+  - **Web & Mobile**: Passwordless email code authentication (default)
+  - **Mobile**: Optional password sign-in with toggle
+  - Email verification for new accounts
+  - Secure token storage with expo-secure-store (mobile)
 - Role-based onboarding (Trainee, Trainer, Gym Owner)
 - Automatic profile creation based on role selection
 - User session management with Clerk
+- Shared authentication across web and mobile
 
 #### Browse & Discovery
 - Browse trainers page with real-time filtering
   - Filter by city, state, rate range, online availability
   - Sort by rating, experience, hourly rate
+  - **User exclusion**: Your own profile hidden from browse results
 - Browse gyms page with search capabilities
 - Trainer detail pages with full profile information
   - Bio, certifications, specialties, experience
   - Training locations, pricing, availability
   - User profile integration with Clerk data
 - Gym detail pages with amenities and pricing
+- **Mobile**: Pull-to-refresh functionality, native scrolling
 
 #### Booking System (Complete End-to-End)
 - **Book Sessions**: Trainees can book sessions with trainers
@@ -147,12 +190,14 @@ npm run dev:web
   - Location input for in-person sessions
   - Notes field for special requests
   - Real-time price calculation
+  - **Available on both web and mobile**
 - **Manage Bookings**: Dual-view dashboard
   - "My Bookings" view: See sessions you've booked as trainee
   - "Booking Requests" view: See incoming requests as trainer
   - Accept/Decline buttons for trainers
   - Real-time status updates (PENDING → CONFIRMED/CANCELLED)
   - Filter by status (All, Pending, Confirmed, Completed)
+  - **Mobile**: Native list views with swipe gestures
 - **Session Details**: Complete session information
   - Trainer/Trainee info with profile pictures
   - Date, time, duration, location
@@ -219,10 +264,27 @@ npm run dev:web
 - Calendar view for session scheduling
 - Trainer availability management
 
+### 📱 Mobile App (Implemented)
+
+- **Full feature parity with web app**
+  - Browse trainers with search and filters
+  - View detailed trainer profiles
+  - Book sessions (date, time, duration, online/in-person)
+  - Trainee dashboard: View your bookings
+  - Trainer dashboard: Manage booking requests (accept/decline)
+  - Profile management with sign out
+- **Native mobile experience**
+  - React Native Paper UI components
+  - Bottom tab navigation
+  - Dark mode theme
+  - Fast performance with Expo
+- **Same authentication & API** as web app
+
 ### 📋 Planned Features
 
-- Mobile app (React Native/Expo)
 - Video calling for online sessions
+- Push notifications for booking updates
+- In-app messaging between users
 - Workout tracking and progress
 - Photo/video upload for profiles
 - Gym membership management
@@ -410,6 +472,26 @@ This is a private project. For questions or issues, contact the development team
 MIT
 
 ## Recent Updates
+
+**January 2025 (v0.4)**
+- **Mobile App Launch**: Complete React Native mobile app with full feature parity
+  - Native iOS/Android apps built with Expo 54
+  - Email code authentication (passwordless) matching web experience
+  - Browse trainers with search and filters
+  - Session booking with date/time selection
+  - Dual-view dashboard (trainee/trainer)
+  - Profile management with sign out
+  - React Native Paper UI with dark theme
+  - Same backend API as web app
+- **Trainer Profile Management**: Complete editing interface for trainers
+  - Edit bio, specialties, certifications, experience, rates
+  - Location settings and online availability
+  - Accessible via user menu dropdown
+- **User Experience Improvements**:
+  - Users no longer see their own profile in trainer browse list
+  - Consistent navigation across web and mobile
+  - Email verification flow for new accounts
+  - Toggle between email code and password sign-in
 
 **December 2025 (v0.3)**
 - Implemented complete booking system with session creation
