@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { apiClient } from '@/lib/api-client';
+import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { apiClient } from "@/lib/api-client";
 
 interface BookingFormProps {
   trainerId: string;
@@ -25,11 +25,11 @@ export function BookingForm({
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    scheduledAt: '',
-    duration: '60',
+    scheduledAt: "",
+    duration: "60",
     isOnline: false,
-    location: '',
-    notes: '',
+    location: "",
+    notes: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,13 +38,14 @@ export function BookingForm({
     setError(null);
 
     try {
+      // Step 1: Create the session in our database
       const sessionData = {
         trainerId,
         traineeId,
         scheduledAt: new Date(formData.scheduledAt).toISOString(),
         duration: parseInt(formData.duration),
         price: trainerRate * (parseInt(formData.duration) / 60),
-        currency: 'USD',
+        currency: "USD",
         isOnline: formData.isOnline,
         location: formData.location || undefined,
         notes: formData.notes || undefined,
@@ -54,12 +55,47 @@ export function BookingForm({
 
       if (response.error) {
         setError(response.error);
+        setLoading(false);
+        return;
+      }
+
+      if (!response.data) {
+        setError("Failed to create session");
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Create Stripe checkout session and redirect to payment
+      const checkoutResponse = await fetch(
+        "/api/stripe/create-checkout-session",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sessionId: response.data.id,
+          }),
+        },
+      );
+
+      const checkoutData = await checkoutResponse.json();
+
+      if (checkoutData.error) {
+        setError(checkoutData.error);
+        setLoading(false);
+        return;
+      }
+
+      // Redirect to Stripe Checkout
+      if (checkoutData.checkoutUrl) {
+        window.location.href = checkoutData.checkoutUrl;
       } else {
-        onSuccess?.();
+        setError("Failed to create payment session");
+        setLoading(false);
       }
     } catch (err) {
-      setError('Failed to create booking');
-    } finally {
+      setError("Failed to create booking");
       setLoading(false);
     }
   };
@@ -87,7 +123,9 @@ export function BookingForm({
         type="datetime-local"
         label="Session Date & Time"
         value={formData.scheduledAt}
-        onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
+        onChange={(e) =>
+          setFormData({ ...formData, scheduledAt: e.target.value })
+        }
         required
         min={new Date().toISOString().slice(0, 16)}
       />
@@ -98,11 +136,11 @@ export function BookingForm({
         value={formData.duration}
         onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
         options={[
-          { value: '30', label: '30 minutes' },
-          { value: '60', label: '1 hour' },
-          { value: '90', label: '1.5 hours' },
-          { value: '120', label: '2 hours' },
-          { value: '180', label: '3 hours' },
+          { value: "30", label: "30 minutes" },
+          { value: "60", label: "1 hour" },
+          { value: "90", label: "1.5 hours" },
+          { value: "120", label: "2 hours" },
+          { value: "180", label: "3 hours" },
         ]}
       />
 
@@ -143,7 +181,9 @@ export function BookingForm({
           label="Location"
           placeholder="Gym name or address"
           value={formData.location}
-          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, location: e.target.value })
+          }
           helperText="Where would you like to meet?"
         />
       )}
@@ -214,7 +254,8 @@ export function BookingForm({
       </div>
 
       <p className="text-xs text-gray-500 dark:text-gray-400">
-        Your booking request will be sent to the trainer for confirmation. Payment will be processed after the trainer accepts.
+        You'll be redirected to Stripe to complete payment. Your session will be
+        automatically confirmed once payment is successful.
       </p>
     </form>
   );

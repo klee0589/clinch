@@ -300,15 +300,24 @@ export default function DashboardPage() {
                           )}
 
                         {/* Payment Status */}
-                        {!session.paid &&
-                          session.status === SessionStatus.CONFIRMED && (
-                            <span className="inline-block px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded mt-2">
-                              Payment Pending
-                            </span>
-                          )}
-                        {session.paid && (
+                        {session.paymentStatus === "UNPAID" && (
+                          <span className="inline-block px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200 rounded mt-2">
+                            Unpaid
+                          </span>
+                        )}
+                        {session.paymentStatus === "PENDING" && (
+                          <span className="inline-block px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded mt-2">
+                            Payment Processing
+                          </span>
+                        )}
+                        {session.paymentStatus === "PAID" && (
                           <span className="inline-block px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded mt-2">
                             ✓ Paid
+                          </span>
+                        )}
+                        {session.paymentStatus === "REFUNDED" && (
+                          <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded mt-2">
+                            Refunded
                           </span>
                         )}
                       </div>

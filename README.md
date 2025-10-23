@@ -28,6 +28,7 @@ clinch/
 | **API** | REST with Supabase client | Fast, type-safe, shared across platforms |
 | **Caching** | React Query (TanStack Query) | Smart data caching, instant navigation |
 | **Maps** | Mapbox GL JS | Interactive maps, beautiful, fast |
+| **Payments** | Stripe Checkout | Secure payments, PCI compliant |
 | **Validation** | Zod | Runtime type safety, great DX |
 | **Testing** | Jest + Vitest | 38 passing tests, pre-commit hooks |
 | **Workspace** | npm workspaces | Monorepo done right |
@@ -39,6 +40,7 @@ clinch/
 - ☑️ Node.js 18+ and npm
 - ☑️ A free Supabase account (PostgreSQL magic)
 - ☑️ A free Clerk account (auth wizardry)
+- ☑️ A free Stripe account (payment processing)
 - ☑️ (Optional) Your phone with Expo Go for mobile testing
 
 ### 1. Get the Code Running
@@ -167,7 +169,7 @@ npm run dev:mobile  # In a new terminal
    - 💪 **Trainer**: Share your knowledge, manage bookings
    - 🏢 **Gym Owner**: Manage your facility (coming soon)
 
-## ✨ What's Built (v0.4 - Mobile Launch Edition)
+## ✨ What's Built (v0.6 - Payment Integration)
 
 ### 🔐 Authentication & Onboarding
 The modern way - passwordless by default, secure by design.
@@ -214,6 +216,44 @@ The complete flow - from discovery to done.
 - Real-time status updates (no refresh needed)
 - Color-coded status badges for quick scanning
 - Native mobile lists with smooth animations
+
+### 💳 Payment Processing
+Secure, PCI-compliant payments with Stripe Checkout.
+
+**Payment Flow:**
+- Automatic redirect to Stripe Checkout after booking
+- Professional hosted payment page (no PCI compliance needed)
+- Support for all major credit/debit cards
+- Real-time payment status tracking
+- Automatic session confirmation on successful payment
+- Webhook integration for payment events
+
+**Payment Status Display:**
+- **Unpaid** (Gray): Session created, awaiting payment
+- **Pending** (Yellow): Payment in progress at Stripe
+- **Paid** (Green): Payment successful, session confirmed
+- **Refunded** (Blue): Payment refunded (future feature)
+
+**Database Integration:**
+- Payment tracking with `stripePaymentIntentId`
+- Checkout session tracking with `stripeCheckoutSessionId`
+- Payment status field with multiple states
+- Indexed for fast payment lookups
+
+**Security:**
+- Webhook signature verification
+- Environment variable protection for API keys
+- No sensitive payment data stored locally
+- Stripe handles PCI compliance
+
+**API Endpoints:**
+- `/api/stripe/create-checkout-session` - Creates Stripe checkout
+- `/api/stripe/webhook` - Handles payment confirmations
+
+**Test Mode:**
+- Full test card support for development
+- Stripe CLI webhook forwarding
+- No real money processing in test mode
 
 #### Database & API
 - Complete Supabase database schema with 8 tables
@@ -265,15 +305,19 @@ The complete flow - from discovery to done.
 
 ### 🔧 Ready for Enhancement
 
-- Payment processing integration (Stripe)
+- ✅ ~~Payment processing integration (Stripe)~~ **DONE! v0.6**
+- Payment refunds and cancellations
+- Trainer payout system (Stripe Connect)
 - Real-time messaging between users
-- Email/SMS notifications
+- Email/SMS notifications for bookings
 - Review and rating system UI
 - Trainee and gym profile editing forms
 - Advanced search with more filters
 - Languages field for trainer profiles (migration script ready: `add-languages-column.sql`)
 - Calendar view for session scheduling
 - Trainer availability management
+- Subscription plans for gyms (Stripe Subscriptions)
+- Promo codes and discounts (Stripe Coupons)
 
 ### 📱 Mobile App - Your Gym in Your Pocket
 
@@ -491,6 +535,35 @@ This is a private project. For questions or issues, contact the development team
 MIT
 
 ## 🎉 Recent Updates
+
+### v0.6 - Payment Integration (January 2025)
+
+**💳 Stripe Payment Processing:**
+- Complete Stripe Checkout integration for secure payments
+- Automatic redirect to hosted payment page after booking
+- Real-time payment status tracking (Unpaid, Pending, Paid, Refunded)
+- Webhook integration for payment confirmation events
+- Automatic session confirmation on successful payment
+- Database fields for payment tracking (`stripePaymentIntentId`, `stripeCheckoutSessionId`, `paymentStatus`)
+- Test mode with Stripe test cards for development
+- PCI compliance handled by Stripe (no sensitive data stored)
+
+**💰 Payment Features:**
+- All major credit/debit cards supported
+- Payment status badges in dashboard
+- Indexed database queries for fast payment lookups
+- Webhook signature verification for security
+- Stripe CLI support for local webhook testing
+
+**📚 Documentation:**
+- Comprehensive payment setup guide (`STRIPE_PAYMENT_SETUP.md`)
+- Quick start guide for testing (`PAYMENT_QUICK_START.md`)
+- Test card reference and troubleshooting
+
+**🎯 What Changed:**
+- Session flow now: Book → Pay → Auto-confirmed (no manual trainer acceptance needed for paid sessions)
+- Payment status prominently displayed on all sessions
+- Database migration script included (`add-stripe-payment-fields.sql`)
 
 ### v0.5 - Maps & Performance (January 2025)
 
