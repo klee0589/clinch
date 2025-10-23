@@ -559,21 +559,51 @@ export default function TraineeProfilePage() {
                   {media.map((item) => (
                     <div
                       key={item.id}
-                      className="relative group aspect-square rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700"
+                      className="relative group rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
                     >
-                      <img
-                        src={item.mediaUrl}
-                        alt={item.description || "Photo"}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
+                      <div className="aspect-square bg-gray-100 dark:bg-gray-700">
+                        <img
+                          src={item.mediaUrl}
+                          alt={item.description || "Photo"}
+                          className="w-full h-full object-contain cursor-pointer"
+                          onClick={() => window.open(item.mediaUrl, "_blank")}
+                          onError={(e) => {
+                            console.error(
+                              "Image failed to load:",
+                              item.mediaUrl,
+                            );
+                          }}
+                          loading="lazy"
+                        />
+                      </div>
+                      <div className="absolute top-2 right-2">
                         <button
                           onClick={() => handleDeleteMedia(item.id)}
-                          className="opacity-0 group-hover:opacity-100 bg-red-600 text-white px-4 py-2 rounded-lg"
+                          className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-lg transition-colors"
+                          title="Delete photo"
                         >
-                          Delete
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
                         </button>
                       </div>
+                      {item.description && (
+                        <div className="p-2 border-t border-gray-200 dark:border-gray-700">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                            {item.description}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

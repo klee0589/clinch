@@ -20,11 +20,31 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 2. Check if user has a trainer profile
+    // 2. Get user's database ID
+    const { data: user, error: userError } = await supabase
+      .from("User")
+      .select("id")
+      .eq("clerkId", userId)
+      .maybeSingle();
+
+    if (userError) {
+      console.error("Error looking up user:", userError);
+      return NextResponse.json(
+        { error: "Failed to look up user" },
+        { status: 500 },
+      );
+    }
+
+    if (!user) {
+      // User doesn't exist in database yet
+      return NextResponse.json({ isTrainer: false });
+    }
+
+    // 3. Check if user has a trainer profile
     const { data: trainerProfile, error } = await supabase
       .from("TrainerProfile")
       .select("id")
-      .eq("userId", userId)
+      .eq("userId", user.id)
       .maybeSingle();
 
     if (error) {

@@ -28,11 +28,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get user's database ID
+    const { data: user, error: userError } = await supabase
+      .from("User")
+      .select("id")
+      .eq("clerkId", userId)
+      .single();
+
+    if (userError || !user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     // Get trainer profile
     const { data: trainerProfile, error: trainerError } = await supabase
       .from("TrainerProfile")
       .select("id")
-      .eq("userId", userId)
+      .eq("userId", user.id)
       .single();
 
     if (trainerError || !trainerProfile) {
@@ -102,11 +113,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get user's database ID
+    const { data: user, error: userError } = await supabase
+      .from("User")
+      .select("id")
+      .eq("clerkId", userId)
+      .single();
+
+    if (userError || !user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     // Get trainer profile
     const { data: trainerProfile, error: trainerError } = await supabase
       .from("TrainerProfile")
       .select("id")
-      .eq("userId", userId)
+      .eq("userId", user.id)
       .single();
 
     if (trainerError || !trainerProfile) {

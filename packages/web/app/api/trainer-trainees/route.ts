@@ -20,11 +20,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 2. Get trainer profile
+    // 2. Get user's database ID first
+    const { data: user, error: userError } = await supabase
+      .from("User")
+      .select("id")
+      .eq("clerkId", userId)
+      .single();
+
+    if (userError || !user) {
+      console.error("User lookup error:", { userId, error: userError });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // 3. Get trainer profile
     const { data: trainerProfile, error: trainerError } = await supabase
       .from("TrainerProfile")
       .select("id")
-      .eq("userId", userId)
+      .eq("userId", user.id)
       .single();
 
     if (trainerError || !trainerProfile) {
@@ -41,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     console.log("Found trainer profile:", trainerProfile.id);
 
-    // 3. Get all unique trainees from sessions
+    // 4. Get all unique trainees from sessions
     // Join with User and TraineeProfile to get full trainee info
     const { data: sessions, error: sessionsError } = await supabase
       .from("Session")
@@ -53,7 +65,6 @@ export async function GET(request: NextRequest) {
           userId,
           goals,
           experienceLevel,
-          fitnessLevel,
           User!inner(
             clerkId,
             email,
@@ -76,7 +87,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 4. Get unique trainees with their last session date
+    // 5. Get unique trainees with their last session date
     const traineeMap = new Map();
 
     sessions?.forEach((session: any) => {
@@ -87,7 +98,6 @@ export async function GET(request: NextRequest) {
           userId: session.TraineeProfile.userId,
           goals: session.TraineeProfile.goals,
           experienceLevel: session.TraineeProfile.experienceLevel,
-          fitnessLevel: session.TraineeProfile.fitnessLevel,
           user: {
             clerkId: session.TraineeProfile.User.clerkId,
             email: session.TraineeProfile.User.email,
@@ -99,7 +109,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // 5. Convert map to array and get session count for each trainee
+    // 6. Convert map to array and get session count for each trainee
     const trainees = await Promise.all(
       Array.from(traineeMap.values()).map(async (trainee) => {
         // Get session count
@@ -145,7 +155,7 @@ export async function GET(request: NextRequest) {
       }),
     );
 
-    // 6. Sort by last session date (most recent first)
+    // 7. Sort by last session date (most recent first)
     trainees.sort((a, b) => {
       if (!a.lastSessionDate) return 1;
       if (!b.lastSessionDate) return -1;
