@@ -58,7 +58,7 @@ export function UserMenu() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-50">
+        <div className="absolute right-0 mt-2 w-56 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-[100]">
           {/* User Info Header */}
           <div className="px-4 py-3 border-b border-zinc-700">
             <p className="text-sm font-medium text-white">

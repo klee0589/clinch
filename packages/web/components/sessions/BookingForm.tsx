@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -23,6 +23,9 @@ export function BookingForm({
 }: BookingFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   const [formData, setFormData] = useState({
     scheduledAt: "",
@@ -31,6 +34,30 @@ export function BookingForm({
     location: "",
     notes: "",
   });
+
+  // Fetch available slots when date or duration changes
+  useEffect(() => {
+    async function fetchSlots() {
+      if (!selectedDate || !trainerId) return;
+
+      setLoadingSlots(true);
+      try {
+        const response = await fetch(
+          `/api/trainer-availability/slots?trainerId=${trainerId}&date=${selectedDate}&duration=${formData.duration}`,
+        );
+        if (response.ok) {
+          const slots = await response.json();
+          setAvailableSlots(slots);
+        }
+      } catch (err) {
+        console.error("Error fetching slots:", err);
+      } finally {
+        setLoadingSlots(false);
+      }
+    }
+
+    fetchSlots();
+  }, [selectedDate, formData.duration, trainerId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,23 +145,30 @@ export function BookingForm({
         )}
       </div>
 
-      {/* Date and Time */}
+      {/* Date Picker */}
       <Input
-        type="datetime-local"
-        label="Session Date & Time"
-        value={formData.scheduledAt}
-        onChange={(e) =>
-          setFormData({ ...formData, scheduledAt: e.target.value })
-        }
+        type="date"
+        label="Session Date"
+        value={selectedDate}
+        onChange={(e) => {
+          setSelectedDate(e.target.value);
+          setFormData({ ...formData, scheduledAt: "" });
+        }}
         required
-        min={new Date().toISOString().slice(0, 16)}
+        min={new Date().toISOString().slice(0, 10)}
       />
 
       {/* Duration */}
       <Select
         label="Duration"
         value={formData.duration}
-        onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+        onChange={(e) => {
+          setFormData({
+            ...formData,
+            duration: e.target.value,
+            scheduledAt: "",
+          });
+        }}
         options={[
           { value: "30", label: "30 minutes" },
           { value: "60", label: "1 hour" },
@@ -143,6 +177,55 @@ export function BookingForm({
           { value: "180", label: "3 hours" },
         ]}
       />
+
+      {/* Available Time Slots */}
+      {selectedDate && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Available Time Slots
+          </label>
+          {loadingSlots ? (
+            <p className="text-sm text-gray-500">Loading available times...</p>
+          ) : availableSlots.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              No available slots for this date. Please choose another date.
+            </p>
+          ) : (
+            <div className="grid grid-cols-3 gap-2">
+              {availableSlots.map((slot) => {
+                const slotTime = new Date(slot);
+                const timeString = slotTime.toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                });
+                const isSelected =
+                  formData.scheduledAt === slotTime.toISOString();
+
+                return (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        scheduledAt: slotTime.toISOString(),
+                      })
+                    }
+                    className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
+                      isSelected
+                        ? "bg-orange-600 text-white border-orange-600"
+                        : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-orange-500"
+                    }`}
+                  >
+                    {timeString}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Session Type */}
       <div className="space-y-2">

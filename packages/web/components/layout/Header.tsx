@@ -8,7 +8,7 @@ export function Header() {
   const { isSignedIn } = useUser();
 
   return (
-    <header className="border-b border-zinc-700 bg-zinc-900/50 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 border-b border-zinc-700 bg-zinc-900/50 backdrop-blur-sm">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <Link href="/" className="text-2xl font-bold text-white">
           Clinch

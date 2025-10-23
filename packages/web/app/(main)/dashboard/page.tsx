@@ -140,6 +140,33 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDeleteSession = async (sessionId: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this session? This action cannot be undone.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/sessions-supabase/${sessionId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        // Remove session from list
+        setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to delete session");
+      }
+    } catch (err) {
+      console.error("Error deleting session:", err);
+      alert("Failed to delete session");
+    }
+  };
+
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
@@ -300,26 +327,40 @@ export default function DashboardPage() {
                           )}
 
                         {/* Payment Status */}
-                        {session.paymentStatus === "UNPAID" && (
-                          <span className="inline-block px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200 rounded mt-2">
-                            Unpaid
-                          </span>
-                        )}
-                        {session.paymentStatus === "PENDING" && (
-                          <span className="inline-block px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded mt-2">
-                            Payment Processing
-                          </span>
-                        )}
-                        {session.paymentStatus === "PAID" && (
-                          <span className="inline-block px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded mt-2">
-                            ✓ Paid
-                          </span>
-                        )}
-                        {session.paymentStatus === "REFUNDED" && (
-                          <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded mt-2">
-                            Refunded
-                          </span>
-                        )}
+                        <div className="space-y-2">
+                          {session.paymentStatus === "UNPAID" && (
+                            <span className="inline-block px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200 rounded">
+                              Unpaid
+                            </span>
+                          )}
+                          {session.paymentStatus === "PENDING" && (
+                            <span className="inline-block px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded">
+                              Payment Processing
+                            </span>
+                          )}
+                          {session.paymentStatus === "PAID" && (
+                            <span className="inline-block px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded">
+                              ✓ Paid
+                            </span>
+                          )}
+                          {session.paymentStatus === "REFUNDED" && (
+                            <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded">
+                              Refunded
+                            </span>
+                          )}
+
+                          {/* Delete Button - Only show for UNPAID sessions */}
+                          {session.paymentStatus === "UNPAID" && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteSession(session.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                            >
+                              Delete
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </CardContent>

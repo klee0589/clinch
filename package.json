@@ -14,8 +14,9 @@
     "db:generate": "npm run generate --workspace=@clinch/database",
     "db:migrate": "npm run migrate --workspace=@clinch/database",
     "db:studio": "npm run studio --workspace=@clinch/database",
-    "test": "npm run test --workspace=@clinch/shared",
-    "test:web": "npm run test --workspace=@clinch/web",
+    "test": "npm run test --workspace=@clinch/shared && cd packages/web && npm test && cd ../..",
+    "test:web": "cd packages/web && npm test",
+    "test:shared": "npm run test --workspace=@clinch/shared",
     "prepare": "husky"
   },
   "keywords": [
