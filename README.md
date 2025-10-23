@@ -9,10 +9,16 @@ clinch/
 ├── packages/
 │   ├── web/          # Next.js web application
 │   ├── mobile/       # React Native Expo app (fully functional)
-│   ├── database/     # Prisma database schema and client
+│   ├── database/     # Prisma database schema (not actively used)
 │   └── shared/       # Shared TypeScript types and validations
-├── .husky/           # Git hooks for pre-commit testing
-└── SQL scripts/      # Database setup and seed scripts
+├── docs/             # Organized documentation
+│   ├── setup/        # Environment and service setup guides
+│   ├── features/     # Feature documentation and guides
+│   ├── guides/       # Project guides and release notes
+│   ├── sql/          # Database migrations and seed scripts
+│   └── archive/      # Deprecated files
+├── .claude/          # Claude Code project rules
+└── .husky/           # Git hooks for pre-commit testing
 ```
 
 ## 🚀 Tech Stack
@@ -30,7 +36,7 @@ clinch/
 | **Maps** | Mapbox GL JS | Interactive maps, beautiful, fast |
 | **Payments** | Stripe Checkout | Secure payments, PCI compliant |
 | **Validation** | Zod | Runtime type safety, great DX |
-| **Testing** | Jest + Vitest | 38 passing tests, pre-commit hooks |
+| **Testing** | Jest + Vitest | 68 passing tests, pre-commit hooks |
 | **Workspace** | npm workspaces | Monorepo done right |
 
 ## ⚡ Quick Start
@@ -54,8 +60,8 @@ npm install  # Grab all dependencies (~2 minutes)
 
 1. Head to [supabase.com](https://supabase.com) and create a free project
 2. Open the SQL Editor and run these scripts in order:
-   - `SQL scripts/supabase-schema.sql` - Creates your data structure (tables, relationships, the works)
-   - `SQL scripts/supabase-seed.sql` - Adds sample data (3 trainers, 2 gyms ready to explore)
+   - `docs/sql/supabase-schema.sql` - Creates your data structure (tables, relationships, the works)
+   - `docs/sql/supabase-seed.sql` - Adds sample data (3 trainers, 2 gyms ready to explore)
 3. Grab your credentials from Project Settings → API
    - Project URL
    - Anon/public key
@@ -169,7 +175,7 @@ npm run dev:mobile  # In a new terminal
    - 💪 **Trainer**: Share your knowledge, manage bookings
    - 🏢 **Gym Owner**: Manage your facility (coming soon)
 
-## ✨ What's Built (v0.6 - Payment Integration)
+## ✨ What's Built (v0.6 - Payments, Availability & Testing)
 
 ### 🔐 Authentication & Onboarding
 The modern way - passwordless by default, secure by design.
@@ -234,6 +240,11 @@ Secure, PCI-compliant payments with Stripe Checkout.
 - **Paid** (Green): Payment successful, session confirmed
 - **Refunded** (Blue): Payment refunded (future feature)
 
+**Session Management:**
+- Delete unpaid sessions (declutter your dashboard)
+- Paid/pending sessions protected from deletion
+- Smart deletion rules prevent data loss
+
 **Database Integration:**
 - Payment tracking with `stripePaymentIntentId`
 - Checkout session tracking with `stripeCheckoutSessionId`
@@ -249,11 +260,68 @@ Secure, PCI-compliant payments with Stripe Checkout.
 **API Endpoints:**
 - `/api/stripe/create-checkout-session` - Creates Stripe checkout
 - `/api/stripe/webhook` - Handles payment confirmations
+- `/api/sessions-supabase/[id]` - Delete with payment validation
 
 **Test Mode:**
 - Full test card support for development
 - Stripe CLI webhook forwarding
 - No real money processing in test mode
+
+### 📅 Trainer Availability System
+Smart scheduling prevents double-bookings and conflicts.
+
+**Weekly Schedules:**
+- Trainers set recurring weekly availability
+- Multiple time slots per day (e.g., 9am-12pm, 2pm-6pm)
+- 30-minute slot increments for booking precision
+- Easy-to-use time picker interface
+
+**Smart Slot Generation:**
+- Only shows available time slots when booking
+- Automatically filters out:
+  - Existing bookings (no conflicts)
+  - Trainer time-off periods
+  - Times outside availability hours
+- Real-time slot updates based on session duration
+
+**Conflict Prevention:**
+- Database-level validation prevents overlaps
+- Algorithm checks availability + bookings + time-off
+- Trainees can't book unavailable times
+- Trainers won't get double-booked
+
+**API Endpoints:**
+- `/api/trainer-availability` - Manage weekly schedules
+- `/api/trainer-availability/slots` - Get available slots for booking
+
+**Database Tables:**
+- `TrainerAvailability` - Weekly recurring schedules
+- `TrainerTimeOff` - Vacation and blocked dates
+
+### 🧪 Comprehensive Testing
+Production-ready test coverage with automated quality checks.
+
+**Test Coverage (68 tests total):**
+- **Session Management** (9 tests): Creation, deletion rules, validation
+- **Payment System** (11 tests): Status transitions, calculations, webhooks
+- **Trainer Availability** (10 tests): Scheduling, conflicts, slot generation
+- **Shared Validations** (38 tests): Zod schemas, data validation
+
+**Automated Testing:**
+- Pre-commit hooks run all tests before commits
+- Git push blocked if tests fail
+- Prettier auto-formatting on commit
+- Zero tolerance for failing tests
+
+**Real Bugs Caught:**
+- Session ID passing bug (response.data.id)
+- Payment status deletion bug (PAID sessions protected)
+- Timezone issues (UTC consistency)
+
+**Test Documentation:**
+- See `docs/features/TESTING_GUIDE.md` for full details
+- Test templates and examples included
+- Run tests: `npm test` (all), `npm run test:web` (web only)
 
 #### Database & API
 - Complete Supabase database schema with 8 tables
@@ -271,11 +339,14 @@ Secure, PCI-compliant payments with Stripe Checkout.
 - Sample seed data (3 trainers, 2 gyms, 3 trainees)
 
 #### Testing & CI/CD
-- 38 passing validation tests (Zod schemas)
+- 68 passing tests across all packages
+  - 30 API/feature tests (Jest)
+  - 38 validation tests (Vitest)
 - Pre-commit hooks with Husky
-- Automated test runner before git commits
+- Automated test runner blocks bad commits
 - Prettier code formatting on commit
 - GitHub repository integration
+- See `docs/features/TESTING_GUIDE.md` for details
 
 #### Profile Management
 - **Trainer Profile Editing**: Complete profile management interface
@@ -306,16 +377,19 @@ Secure, PCI-compliant payments with Stripe Checkout.
 ### 🔧 Ready for Enhancement
 
 - ✅ ~~Payment processing integration (Stripe)~~ **DONE! v0.6**
+- ✅ ~~Trainer availability management~~ **DONE! v0.6**
+- ✅ ~~Session deletion with payment validation~~ **DONE! v0.6**
+- ✅ ~~Comprehensive test suite with pre-commit hooks~~ **DONE! v0.6**
 - Payment refunds and cancellations
 - Trainer payout system (Stripe Connect)
+- Time-off management for trainers (vacation blocking)
 - Real-time messaging between users
 - Email/SMS notifications for bookings
 - Review and rating system UI
 - Trainee and gym profile editing forms
 - Advanced search with more filters
-- Languages field for trainer profiles (migration script ready: `add-languages-column.sql`)
+- Languages field for trainer profiles (migration script ready: `docs/sql/add-languages-column.sql`)
 - Calendar view for session scheduling
-- Trainer availability management
 - Subscription plans for gyms (Stripe Subscriptions)
 - Promo codes and discounts (Stripe Coupons)
 
@@ -536,7 +610,7 @@ MIT
 
 ## 🎉 Recent Updates
 
-### v0.6 - Payment Integration (January 2025)
+### v0.6 - Payments, Availability & Testing (January 2025)
 
 **💳 Stripe Payment Processing:**
 - Complete Stripe Checkout integration for secure payments
@@ -548,22 +622,50 @@ MIT
 - Test mode with Stripe test cards for development
 - PCI compliance handled by Stripe (no sensitive data stored)
 
-**💰 Payment Features:**
-- All major credit/debit cards supported
-- Payment status badges in dashboard
-- Indexed database queries for fast payment lookups
-- Webhook signature verification for security
-- Stripe CLI support for local webhook testing
+**🗑️ Session Deletion with Payment Validation:**
+- Delete button for unpaid sessions
+- Paid/pending sessions protected from deletion
+- Smart validation prevents data loss
+- Clean up cluttered dashboards safely
+
+**📅 Trainer Availability System:**
+- Weekly recurring availability schedules
+- Multiple time slots per day
+- 30-minute increment slot generation
+- Smart conflict detection (no double-bookings)
+- Time-off periods support
+- Real-time available slots in booking form
+- UTC timezone consistency
+- Database tables: `TrainerAvailability`, `TrainerTimeOff`
+
+**🧪 Comprehensive Testing Suite:**
+- 68 total tests passing (30 web + 38 shared)
+- Session management tests (creation, deletion, validation)
+- Payment system tests (status transitions, calculations, webhooks)
+- Availability tests (scheduling, conflicts, slot generation)
+- Pre-commit hooks block failing tests
+- Automated test running before every commit
+- Caught real bugs: session ID passing, payment deletion, timezone issues
+
+**🐛 Bug Fixes:**
+- Fixed user dropdown z-index issue
+- Session ID passing bug in BookingForm (`response.data.id`)
+- UTC timezone handling in availability system
+- Test environment variable mocking
 
 **📚 Documentation:**
-- Comprehensive payment setup guide (`STRIPE_PAYMENT_SETUP.md`)
-- Quick start guide for testing (`PAYMENT_QUICK_START.md`)
-- Test card reference and troubleshooting
+- Reorganized into `docs/` folder structure
+- `docs/setup/` - Environment and service setup
+- `docs/features/` - Feature guides (payments, availability, testing)
+- `docs/sql/` - All database migrations
+- `docs/guides/` - Project guides and release notes
+- Added `.claude/rules.md` - Project conventions for AI assistants
+- `TESTING_GUIDE.md` - Complete testing documentation
+- `TRAINER_AVAILABILITY_GUIDE.md` - Availability system architecture
 
-**🎯 What Changed:**
-- Session flow now: Book → Pay → Auto-confirmed (no manual trainer acceptance needed for paid sessions)
-- Payment status prominently displayed on all sessions
-- Database migration script included (`add-stripe-payment-fields.sql`)
+**🎯 Database Migrations:**
+- `docs/sql/add-stripe-payment-fields.sql` - Payment tracking fields
+- `docs/sql/add-trainer-availability.sql` - Availability tables and constraints
 
 ### v0.5 - Maps & Performance (January 2025)
 
